@@ -234,23 +234,27 @@ module.exports = function (params, cy, api) {
 		};
 
 		cy.on('mousemove', 'node', data.eMouseMove= function(e){
-			if(!isInsideCompound(nodeWithRenderedCue, e)){
-				clearDraws()
-			}
-			else if(nodeWithRenderedCue && !preventDrawing){
-				drawExpandCollapseCue(nodeWithRenderedCue);
-			}
+      if (!options().appearOnGroupSelect) {
+        if(!isInsideCompound(nodeWithRenderedCue, e)){
+          clearDraws()
+        }
+        else if(nodeWithRenderedCue && !preventDrawing){
+          drawExpandCollapseCue(nodeWithRenderedCue);
+        }
+      }
 		});
 
 		cy.on('mouseover', 'node', data.eMouseOver = function (e) {
-			var node = this;
-			// clear draws if any
-			if (api.isCollapsible(node) || api.isExpandable(node)){
-				if ( nodeWithRenderedCue && nodeWithRenderedCue.id() != node.id() ) {
-					clearDraws();
-				}
-				drawExpandCollapseCue(node);
-			}
+      if (!options().appearOnGroupSelect) {
+        var node = this;
+        // clear draws if any
+        if (api.isCollapsible(node) || api.isExpandable(node)){
+          if ( nodeWithRenderedCue && nodeWithRenderedCue.id() != node.id() ) {
+            clearDraws();
+          }
+          drawExpandCollapseCue(node);
+        }
+      }
 		});
 
 		var oldMousePos = null, currMousePos = null;
@@ -280,10 +284,18 @@ module.exports = function (params, cy, api) {
 		});
 
 		var ur;
-		cy.on('select', 'node', data.eSelect = function(){
+		cy.on('select', 'node', data.eSelect = function(evt){
 			if (this.length > cy.nodes(":selected").length)
-				this.unselect();
-		});
+        this.unselect();
+
+      const node = this;
+      drawExpandCollapseCue(node);
+    });
+
+    cy.on('deselect', 'node', data.eDeselect = function(evt) {
+      clearDraws();
+      nodeWithRenderedCue = null;
+    });
 
 		cy.on('tap', 'node', data.eTap = function (event) {
 			var node = nodeWithRenderedCue;
