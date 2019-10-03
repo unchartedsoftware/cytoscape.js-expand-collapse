@@ -208,9 +208,13 @@ module.exports = function (params, cy, api) {
           }
         });
 
-        cy.bind('zoom pan', data.eZoom = function () {
-          if ( nodeWithRenderedCue ) {
+        cy.on('zoom pan', data.eZoom = function (e) {
+          if (nodeWithRenderedCue) {
             clearDraws();
+            // if clicked inside group, then do this
+            if (options().appearOnGroupSelect) {// && isInsideCompound(nodeWithRenderedCue, e)) {
+              drawExpandCollapseCue(nodeWithRenderedCue);
+            }
           }
         });
 
@@ -266,7 +270,7 @@ module.exports = function (params, cy, api) {
 		});
 
 		cy.on('grab', 'node', data.eGrab = function (e) {
-			preventDrawing = true;
+      preventDrawing = true;
 		});
 
 		cy.on('free', 'node', data.eFree = function (e) {
@@ -279,8 +283,10 @@ module.exports = function (params, cy, api) {
 		});
 
 		cy.on('remove', 'node', data.eRemove = function () {
-			clearDraws();
-			nodeWithRenderedCue = null;
+      if (!options().appearOnGroupSelect) {
+        clearDraws();
+        nodeWithRenderedCue = null;
+      }
 		});
 
 		var ur;
@@ -288,13 +294,25 @@ module.exports = function (params, cy, api) {
 			if (this.length > cy.nodes(":selected").length)
         this.unselect();
 
-      const node = this;
-      drawExpandCollapseCue(node);
+      if (options().appearOnGroupSelect) {
+        const node = this;
+        drawExpandCollapseCue(node);
+      }
     });
 
-    cy.on('deselect', 'node', data.eDeselect = function(evt) {
+    cy.on('unselect', 'node', data.eDeselect = function(evt) {
       clearDraws();
       nodeWithRenderedCue = null;
+    });
+
+    cy.on('drag', 'node', data.eDrag = function() {
+      // Only want it to draw if group is selected while being dragged
+      if (nodeWithRenderedCue) {
+        if (options().appearOnGroupSelect) {
+          const node = this;
+          drawExpandCollapseCue(nodeWithRenderedCue);
+        }
+      }
     });
 
 		cy.on('tap', 'node', data.eTap = function (event) {
@@ -330,15 +348,18 @@ module.exports = function (params, cy, api) {
 						}
 						else
 							api.collapse(node, opts);
-				else if(api.isExpandable(node))
-					if (opts.undoable)
-						ur.do("expand", {
-							nodes: node,
-							options: opts
-						});
-					else
-						api.expand(node, opts);
-					}
+          else if(api.isExpandable(node))
+            if (opts.undoable)
+              ur.do("expand", {
+                nodes: node,
+                options: opts
+              });
+            else
+              api.expand(node, opts);
+          if (options().appearOnGroupSelect) {
+            drawExpandCollapseCue(node);
+          }
+				}
 			}
 		});
       }
@@ -370,7 +391,8 @@ module.exports = function (params, cy, api) {
           .off('add', 'node', data.eAdd)
           .off('select', 'node', data.eSelect)
           .off('free', 'node', data.eFree)
-          .off('zoom pan', data.eZoom);
+          .off('zoom pan', data.eZoom)
+          .off('drag', 'node', data.eDrag);
 
       window.removeEventListener('resize', data.eWindowResize);
     },
@@ -394,7 +416,8 @@ module.exports = function (params, cy, api) {
         .on('add', 'node', data.eAdd)
         .on('select', 'node', data.eSelect)
         .on('free', 'node', data.eFree)
-        .on('zoom pan', data.eZoom);
+        .on('zoom pan', data.eZoom)
+        .on('drag', 'node', data.eDrag);
 
       window.addEventListener('resize', data.eWindowResize);
     }
