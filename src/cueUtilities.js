@@ -211,10 +211,6 @@ module.exports = function (params, cy, api) {
         cy.on('zoom pan', data.eZoom = function (e) {
           if (nodeWithRenderedCue) {
             clearDraws();
-            // if clicked inside group, then do this
-            if (options().appearOnGroupSelect) {// && isInsideCompound(nodeWithRenderedCue, e)) {
-              drawExpandCollapseCue(nodeWithRenderedCue);
-            }
           }
         });
 
