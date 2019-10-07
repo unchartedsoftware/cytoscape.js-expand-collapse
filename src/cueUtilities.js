@@ -120,8 +120,8 @@ module.exports = function (params, cy, api) {
           var offset = 1;
           var size = cy.zoom() < 1 ? rectSize / (2*cy.zoom()) : rectSize / 2;
 
-          var x = node.position('x') - node.width() / 2 - parseFloat(node.css('padding-left'));
-                  //+ parseFloat(node.css('border-width')) + size + offset;
+          var x = node.position('x') - node.width() / 2 - parseFloat(node.css('padding-left'))
+                  + parseFloat(node.css('border-width')) + size + offset;
           var y = node.position('y') - node.height() / 2 - parseFloat(node.css('padding-top'))
                   + parseFloat(node.css('border-width')) + size + offset;
 
@@ -179,22 +179,22 @@ module.exports = function (params, cy, api) {
         // Draw expand/collapse cue if specified use an image else render it in the default way
         if (!isCollapsed && options().expandCueImage) {
           if (options().appearOnGroupSelect) {
-            ctx.drawImage(options().expandCueImage, expandcollapseCenterX, expandcollapseCenterY, rectSize, rectSize);
+            ctx.drawImage(options().expandCueImage, expandcollapseStartX, expandcollapseStartY, rectSize, rectSize);
           }
           else {
             var img=new Image();
             img.src = options().expandCueImage;
-            ctx.drawImage(img, expandcollapseCenterX, expandcollapseCenterY, rectSize, rectSize);
+            ctx.drawImage(img, expandcollapseStartX, expandcollapseStartY, rectSize, rectSize);
           }
         }
         else if (isCollapsed && options().collapseCueImage) {
           if (options().appearOnGroupSelect) {
-            ctx.drawImage(options().collapseCueImage, expandcollapseCenterX, expandcollapseCenterY, rectSize, rectSize);
+            ctx.drawImage(options().collapseCueImage, expandcollapseStartX, expandcollapseStartY, rectSize, rectSize);
           }
           else {
             var img=new Image();
             img.src = options().collapseCueImage;
-            ctx.drawImage(img, expandcollapseCenterX, expandcollapseCenterY, rectSize, rectSize);
+            ctx.drawImage(img, expandcollapseStartX, expandcollapseStartY, rectSize, rectSize);
           }
         }
         else {
