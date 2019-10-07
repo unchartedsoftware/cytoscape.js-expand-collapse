@@ -120,8 +120,8 @@ module.exports = function (params, cy, api) {
           var offset = 1;
           var size = cy.zoom() < 1 ? rectSize / (2*cy.zoom()) : rectSize / 2;
 
-          var x = node.position('x') - node.width() / 2 - parseFloat(node.css('padding-left'))
-                  + parseFloat(node.css('border-width')) + size + offset;
+          var x = node.position('x') - node.width() / 2 - parseFloat(node.css('padding-left'));
+                  //+ parseFloat(node.css('border-width')) + size + offset;
           var y = node.position('y') - node.height() / 2 - parseFloat(node.css('padding-top'))
                   + parseFloat(node.css('border-width')) + size + offset;
 
@@ -129,6 +129,32 @@ module.exports = function (params, cy, api) {
             x : x,
             y : y
           };
+        } else if (options().expandCollapseCuePosition === 'top-right') {
+          var offset = 1;
+          var size = cy.zoom() < 1 ? rectSize / (2*cy.zoom()) : rectSize / 2;
+
+          var x = node.position('x') + node.width() / 2 + parseFloat(node.css('padding-left'))
+                  - parseFloat(node.css('border-width')) - size - offset;
+          var y = node.position('y') - node.height() / 2 - parseFloat(node.css('padding-top'))
+                  + parseFloat(node.css('border-width')) + size + offset;
+
+          cueCenter = {
+            x : x,
+            y : y
+          };
+        } else if (options().expandCollapseCuePosition === 'top-center') {
+          const x = node.position('x');
+          let y;
+          if (cy.expandCollapse('get').isExpandable(node)) {
+              y = node.position('y');
+          } else {
+              y = node.position('y') - 12 - node.height() / 2;
+          }
+          cueCenter = {
+            x: x,
+            y: y
+          };
+
         } else {
           var option = options().expandCollapseCuePosition;
           cueCenter = typeof option === 'function' ? option.call(this, node) : option;
