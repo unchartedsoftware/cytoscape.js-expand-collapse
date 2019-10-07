@@ -46,7 +46,7 @@ module.exports = function (params, cy, api) {
         $canvas.style.position = 'absolute';
         $canvas.style.top = 0;
         $canvas.style.left = 0;
-        $canvas.style.zIndex = 999;
+        $canvas.style.zIndex = 998;
 
         setTimeout(function () {
           var canvasBb = offset($canvas);
@@ -152,14 +152,24 @@ module.exports = function (params, cy, api) {
 
         // Draw expand/collapse cue if specified use an image else render it in the default way
         if (!isCollapsed && options().expandCueImage) {
-          var img=new Image();
-          img.src = options().expandCueImage;
-          ctx.drawImage(img, expandcollapseCenterX, expandcollapseCenterY, rectSize, rectSize);
+          if (options().appearOnGroupSelect) {
+            ctx.drawImage(options().expandCueImage, expandcollapseCenterX, expandcollapseCenterY, rectSize, rectSize);
+          }
+          else {
+            var img=new Image();
+            img.src = options().expandCueImage;
+            ctx.drawImage(img, expandcollapseCenterX, expandcollapseCenterY, rectSize, rectSize);
+          }
         }
         else if (isCollapsed && options().collapseCueImage) {
-          var img=new Image();
-          img.src = options().collapseCueImage;
-          ctx.drawImage(img, expandcollapseCenterX, expandcollapseCenterY, rectSize, rectSize);
+          if (options().appearOnGroupSelect) {
+            ctx.drawImage(options().collapseCueImage, expandcollapseCenterX, expandcollapseCenterY, rectSize, rectSize);
+          }
+          else {
+            var img=new Image();
+            img.src = options().collapseCueImage;
+            ctx.drawImage(img, expandcollapseCenterX, expandcollapseCenterY, rectSize, rectSize);
+          }
         }
         else {
           var oldFillStyle = ctx.fillStyle;
@@ -196,7 +206,7 @@ module.exports = function (params, cy, api) {
         node._private.data.expandcollapseRenderedStartX = expandcollapseStartX;
         node._private.data.expandcollapseRenderedStartY = expandcollapseStartY;
         node._private.data.expandcollapseRenderedCueSize = expandcollapseRectSize;
-        
+
         nodeWithRenderedCue = node;
       }
 
@@ -211,6 +221,9 @@ module.exports = function (params, cy, api) {
         cy.on('zoom pan', data.eZoom = function (e) {
           if (nodeWithRenderedCue) {
             clearDraws();
+            if (options().appearOnGroupSelect) {
+              drawExpandCollapseCue(nodeWithRenderedCue);
+            }
           }
         });
 
@@ -297,8 +310,10 @@ module.exports = function (params, cy, api) {
     });
 
     cy.on('unselect', 'node', data.eDeselect = function(evt) {
-      clearDraws();
-      nodeWithRenderedCue = null;
+      if (options().appearOnGroupSelect) {
+        clearDraws();
+        nodeWithRenderedCue = null;
+      }
     });
 
     cy.on('drag', 'node', data.eDrag = function() {
@@ -353,10 +368,15 @@ module.exports = function (params, cy, api) {
             else
               api.expand(node, opts);
           if (options().appearOnGroupSelect) {
-            drawExpandCollapseCue(node);
+            drawExpandCollapseCue(this);
           }
 				}
-			}
+      }
+      // else {
+      //   if (options().appearOnGroupSelect) {
+      //     drawExpandCollapseCue(this);
+      //   }
+      // }
 		});
       }
 
