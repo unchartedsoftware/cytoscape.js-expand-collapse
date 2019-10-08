@@ -46,7 +46,7 @@ module.exports = function (params, cy, api) {
         $canvas.style.position = 'absolute';
         $canvas.style.top = 0;
         $canvas.style.left = 0;
-        $canvas.style.zIndex = 998;
+        $canvas.style.zIndex = 999;
 
         setTimeout(function () {
           var canvasBb = offset($canvas);
