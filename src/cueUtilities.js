@@ -144,17 +144,12 @@ module.exports = function (params, cy, api) {
           };
         } else if (options().expandCollapseCuePosition === 'top-center') {
           const x = node.position('x');
-          let y;
-          if (cy.expandCollapse('get').isExpandable(node)) {
-              y = node.position('y');
-          } else {
-              y = node.position('y') - 12 - node.height() / 2;
-          }
+          const y = node.position('y') - node.height() / 2 - parseFloat(node.css('padding-top'))
+                 + parseFloat(node.css('border-width')) + size + offset;
           cueCenter = {
             x: x,
             y: y
           };
-
         } else {
           var option = options().expandCollapseCuePosition;
           cueCenter = typeof option === 'function' ? option.call(this, node) : option;
@@ -239,8 +234,8 @@ module.exports = function (params, cy, api) {
           }
         });
 
-		// check if mouse is inside given node
-		var isInsideCompound = function(node, e){
+    // check if mouse is inside given node
+    var isInsideCompound = function(node, e){
 			if (node){
 				var currMousePos = e.position || e.cyPosition;
 				var topLeft = {
@@ -256,9 +251,9 @@ module.exports = function (params, cy, api) {
 				}
 			}
 			return false;
-		};
+    };
 
-		cy.on('mousemove', 'node', data.eMouseMove= function(e){
+    cy.on('mousemove', 'node', data.eMouseMove= function(e){
       if (!options().appearOnGroupSelect) {
         if(!isInsideCompound(nodeWithRenderedCue, e)){
           clearDraws()
@@ -267,7 +262,7 @@ module.exports = function (params, cy, api) {
           drawExpandCollapseCue(nodeWithRenderedCue);
         }
       }
-		});
+    });
 
 		cy.on('mouseover', 'node', data.eMouseOver = function (e) {
       if (!options().appearOnGroupSelect) {
