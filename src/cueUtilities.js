@@ -286,21 +286,6 @@ module.exports = function (params, cy, api) {
           return false;
         }
 
-        // cy.on('mousemove', 'node', data.eMouseMove= function(e){
-        //   if(!isInsideCompound(hoveredGroup, e)){
-        //     if (hoveredGroup && !selectedGroupsContainsGroup(hoveredGroup)) {
-        //       clearDraws();
-      
-        //       if (options().appearOnGroupSelect) {
-        //         drawCuesForSelectedGroups();
-        //       }
-        //     }
-        //   }
-        //   else if(hoveredGroup && !preventDrawing){
-        //     hoveredGroup = drawExpandCollapseCue(hoveredGroup);
-        //   }
-        // });
-
         cy.on('mouseout', 'node', data.eMouseMove = function(e) {
           let node = this;
           if (hoveredGroup && hoveredGroup._private.data.id === node._private.data.id) {
