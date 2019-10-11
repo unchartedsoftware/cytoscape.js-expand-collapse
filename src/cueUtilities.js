@@ -103,6 +103,10 @@ module.exports = function (params, cy, api) {
         selectedGroups = selectedGroups.map(group => drawExpandCollapseCue(group));
       }
 
+      function removeGroup(node) {
+        selectedGroups = selectedGroups.filter(group => group._private.data.id !== node._private.data.id);
+      }
+
       function isAGroup(node) {
         const children = node.children();
         const collapsedChildren = node._private.data.collapsedChildren;
@@ -282,19 +286,31 @@ module.exports = function (params, cy, api) {
           return false;
         }
 
-        cy.on('mousemove', 'node', data.eMouseMove= function(e){
-          if(!isInsideCompound(hoveredGroup, e)){
-            if (hoveredGroup && !selectedGroupsContainsGroup(hoveredGroup)) {
-              clearDraws();
+        // cy.on('mousemove', 'node', data.eMouseMove= function(e){
+        //   if(!isInsideCompound(hoveredGroup, e)){
+        //     if (hoveredGroup && !selectedGroupsContainsGroup(hoveredGroup)) {
+        //       clearDraws();
       
-              if (options().appearOnGroupSelect) {
-                drawCuesForSelectedGroups();
-              }
-            }
+        //       if (options().appearOnGroupSelect) {
+        //         drawCuesForSelectedGroups();
+        //       }
+        //     }
+        //   }
+        //   else if(hoveredGroup && !preventDrawing){
+        //     hoveredGroup = drawExpandCollapseCue(hoveredGroup);
+        //   }
+        // });
+
+        cy.on('mouseout', 'node', data.eMouseMove = function(e) {
+          let node = this;
+          if (hoveredGroup && hoveredGroup._private.data.id === node._private.data.id) {
+            clearDraws();
+            hoveredGroup = null;
+            drawCuesForSelectedGroups();
           }
-          else if(hoveredGroup && !preventDrawing){
-            hoveredGroup = drawExpandCollapseCue(hoveredGroup);
-          }
+          // else if (selectedGroupsContainsGroup(node)) {
+          //   removeGroup(node);
+          // }
         });
 
         cy.on('mouseover', 'node', data.eMouseOver = function (e) {
@@ -375,7 +391,7 @@ module.exports = function (params, cy, api) {
             clearDraws();
             // hoveredGroup = null;
             if (node) {
-              selectedGroups = selectedGroups.filter(group => group._private.data.id !== node._private.data.id);
+              removeGroup(node);
               drawCuesForSelectedGroups();
             }
           }
@@ -461,6 +477,7 @@ module.exports = function (params, cy, api) {
         cy.trigger('expandcollapse.clearvisualcue');
 
         cy.off('mouseover', 'node', data.eMouseOver)
+          .off('mouseout', 'node', data.eMouseMove)
           .off('mousemove', 'node', data.eMouseMove)
           .off('mousedown', 'node', data.eMouseDown)
           .off('mouseup', 'node', data.eMouseUp)
@@ -487,6 +504,7 @@ module.exports = function (params, cy, api) {
       }
 
       cy.on('mouseover', 'node', data.eMouseOver)
+        .on('mouseout', 'node', data.eMouseMove)
         .on('mousemove', 'node', data.eMouseMove)
         .on('mousedown', 'node', data.eMouseDown)
         .on('mouseup', 'node', data.eMouseUp)
