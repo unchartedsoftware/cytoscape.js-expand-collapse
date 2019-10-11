@@ -4,7 +4,8 @@ module.exports = function (params, cy, api) {
   var elementUtilities;
   var fn = params;
 
-  var nodeWithRenderedCue, preventDrawing = false;
+  var hoveredGroup, preventDrawing = false;
+  let selectedGroups = [];
 
   const getData = function(){
     let scratch = cy.scratch('_cyExpandCollapse');
@@ -90,12 +91,15 @@ module.exports = function (params, cy, api) {
         ctx.clearRect(0, 0, w, h);
       }
 
+      function isAGroup(node) {
+        const children = node.children();
+        const collapsedChildren = node._private.data.collapsedChildren;
+        const hasChildren = children != null && children.length > 0;
+        return hasChildren || !(collapsedChildren == null);
+      }
       function drawExpandCollapseCue(node) {
-        var children = node.children();
-        var collapsedChildren = node._private.data.collapsedChildren;
-        var hasChildren = children != null && children.length > 0;
         // If this is a simple node with no collapsed children return directly
-        if (!hasChildren && collapsedChildren == null) {
+        if (!isAGroup(node)) {
           return;
         }
 
@@ -143,6 +147,9 @@ module.exports = function (params, cy, api) {
             y : y
           };
         } else if (options().expandCollapseCuePosition === 'top-center') {
+          var offset = 1;
+          var size = cy.zoom() < 1 ? rectSize / (2*cy.zoom()) : rectSize / 2;
+
           const x = node.position('x');
           const y = node.position('y') - node.height() / 2 - parseFloat(node.css('padding-top'))
                  + parseFloat(node.css('border-width')) + size + offset;
@@ -214,22 +221,22 @@ module.exports = function (params, cy, api) {
         node._private.data.expandcollapseRenderedStartY = expandcollapseStartY;
         node._private.data.expandcollapseRenderedCueSize = expandcollapseRectSize;
 
-        nodeWithRenderedCue = node;
+        return node;
       }
 
       {
         cy.on('expandcollapse.clearvisualcue', function() {
 
-          if ( nodeWithRenderedCue ) {
+          if ( hoveredGroup ) {
             clearDraws();
           }
         });
 
         cy.on('zoom pan', data.eZoom = function (e) {
-          if (nodeWithRenderedCue) {
+          if (hoveredGroup || selectedGroups.length > 0) {
             clearDraws();
             if (options().appearOnGroupSelect) {
-              drawExpandCollapseCue(nodeWithRenderedCue);
+              selectedGroups = selectedGroups.map(group => drawExpandCollapseCue(group));
             }
           }
         });
@@ -252,29 +259,55 @@ module.exports = function (params, cy, api) {
 			}
 			return false;
     };
-
-    cy.on('mousemove', 'node', data.eMouseMove= function(e){
-      if (!options().appearOnGroupSelect) {
-        if(!isInsideCompound(nodeWithRenderedCue, e)){
-          clearDraws()
-        }
-        else if(nodeWithRenderedCue && !preventDrawing){
-          drawExpandCollapseCue(nodeWithRenderedCue);
+    function selectedGroupsContainsGroup(group) {
+      for (let i = 0; i < selectedGroups.length; i++) {
+        if (selectedGroups[i]._private.data.id === group._private.data.id) {
+          return true;
         }
       }
+      return false;
+    }
+
+    cy.on('mousemove', 'node', data.eMouseMove= function(e){
+      // if (!options().appearOnGroupSelect) {
+        if(!isInsideCompound(hoveredGroup, e)){
+          if (hoveredGroup && !selectedGroupsContainsGroup(hoveredGroup)) {
+            clearDraws();
+    
+            if (options().appearOnGroupSelect) {
+              selectedGroups = selectedGroups.map(group => drawExpandCollapseCue(group));
+            }
+          }
+      }
+      else if(hoveredGroup && !preventDrawing){
+        hoveredGroup = drawExpandCollapseCue(hoveredGroup);
+      }
+      // }
     });
 
 		cy.on('mouseover', 'node', data.eMouseOver = function (e) {
-      if (!options().appearOnGroupSelect) {
-        var node = this;
+      // if (!options().appearOnGroupSelect) {
+      let node = this;
+      if (isAGroup(node)) {
         // clear draws if any
         if (api.isCollapsible(node) || api.isExpandable(node)){
-          if ( nodeWithRenderedCue && nodeWithRenderedCue.id() != node.id() ) {
+          if ( hoveredGroup && hoveredGroup.id() != node.id() ) {
             clearDraws();
+            if (options().appearOnGroupSelect) {
+              selectedGroups = selectedGroups.map(group => drawExpandCollapseCue(group));
+            }
           }
-          drawExpandCollapseCue(node);
+          if (node && !selectedGroupsContainsGroup(node)) {
+            hoveredGroup = drawExpandCollapseCue(node);
+          }
         }
+      } else {
+        // needed incase we hover over a regular node inside a group
+        clearDraws();
+        hoveredGroup = null;
+        selectedGroups = selectedGroups.map(group => drawExpandCollapseCue(group));
       }
+      // }
 		});
 
 		var oldMousePos = null, currMousePos = null;
@@ -294,14 +327,21 @@ module.exports = function (params, cy, api) {
 		});
 
 		cy.on('position', 'node', data.ePosition = function () {
-			if (nodeWithRenderedCue)
-				clearDraws();
+			if (hoveredGroup) {
+        clearDraws();
+        if (options().appearOnGroupSelect) {
+          selectedGroups = selectedGroups.map(group => drawExpandCollapseCue(group));
+        }
+      }
 		});
 
 		cy.on('remove', 'node', data.eRemove = function () {
       if (!options().appearOnGroupSelect) {
         clearDraws();
-        nodeWithRenderedCue = null;
+        // if (options().appearOnGroupSelect) {
+        //   selectedGroups = selectedGroups.map(group => drawExpandCollapseCue(group));
+        // }
+        hoveredGroup = null;
       }
 		});
 
@@ -311,32 +351,69 @@ module.exports = function (params, cy, api) {
         this.unselect();
 
       if (options().appearOnGroupSelect) {
-        const node = this;
-        drawExpandCollapseCue(node);
-      }
-    });
-
-    cy.on('unselect', 'node', data.eDeselect = function(evt) {
-      if (options().appearOnGroupSelect) {
-        clearDraws();
-        nodeWithRenderedCue = null;
-      }
-    });
-
-    cy.on('drag', 'node', data.eDrag = function() {
-      // Only want it to draw if group is selected while being dragged
-      if (nodeWithRenderedCue) {
-        if (options().appearOnGroupSelect) {
-          const node = this;
-          drawExpandCollapseCue(nodeWithRenderedCue);
+        let node = this;
+        // selected group shouldnot be selected group;
+        if (hoveredGroup && node._private.data.id === hoveredGroup._private.data.id) {
+          hoveredGroup = null;
+        }
+        if (isAGroup(node) && !selectedGroupsContainsGroup(node)) {
+          selectedGroups.push(drawExpandCollapseCue(node));
         }
       }
     });
 
+    cy.on('unselect', 'node', data.eUnselect = function(evt) {
+      if (options().appearOnGroupSelect) {
+        let node = this;
+        clearDraws();
+        // hoveredGroup = null;
+        if (node) {
+          selectedGroups = selectedGroups.filter(group => group._private.data.id !== node._private.data.id);
+          selectedGroups = selectedGroups.map(group => drawExpandCollapseCue(group));
+        }
+      }
+    });
+
+    function anyNodeHasACue() {
+      return hoveredGroup || selectedGroups.length > 0;
+    }
+
+    function hoveredGroupExistsAndNotInSelectedGroup() {
+      return hoveredGroup && !selectedGroupsContainsGroup(hoveredGroup);
+    }
+
+    cy.on('drag', 'node', data.eDrag = function() {
+      // let node = hovered;
+      // if (hoveredGroup === null) {
+      //   hoveredGroup = node;
+      // }
+      // if (hoveredGroup.data.id === node.data.id) {
+      //   hoveredGroup = drawExpandCollapseCue(hoveredGroup);
+      // }
+      // Only want it to draw if group is selected while being dragged
+      if (anyNodeHasACue()) {
+        clearDraws();
+        selectedGroups = selectedGroups.map(group => drawExpandCollapseCue(group));
+        if (hoveredGroupExistsAndNotInSelectedGroup()) {
+          hoveredGroup = drawExpandCollapseCue(hoveredGroup);
+        }
+      }
+      // if (hoveredGroup) {
+      //   if (options().appearOnGroupSelect) {
+      //     const node = this;
+      //     drawExpandCollapseCue(hoveredGroup);
+      //   }
+      // }
+    });
+
 		cy.on('tap', 'node', data.eTap = function (event) {
-			var node = nodeWithRenderedCue;
+			var node = this;
       var opts = options();
-			if (node){
+      let nodeHasCue = selectedGroupsContainsGroup(node);
+      if (hoveredGroup) {
+        nodeHasCue = nodeHasCue || hoveredGroup._private.data.id === node._private.data.id;
+      }
+			if (nodeHasCue){
 				var expandcollapseRenderedStartX = node._private.data.expandcollapseRenderedStartX;
 				var expandcollapseRenderedStartY = node._private.data.expandcollapseRenderedStartY;
 				var expandcollapseRenderedRectSize = node._private.data.expandcollapseRenderedCueSize;
@@ -375,7 +452,8 @@ module.exports = function (params, cy, api) {
             else
               api.expand(node, opts);
           if (options().appearOnGroupSelect) {
-            drawExpandCollapseCue(this);
+            clearDraws();
+            selectedGroups = selectedGroups.map(group => drawExpandCollapseCue(group));
           }
 				}
       }
@@ -413,6 +491,7 @@ module.exports = function (params, cy, api) {
           .off('tap', 'node', data.eTap)
           .off('add', 'node', data.eAdd)
           .off('select', 'node', data.eSelect)
+          .off('unselect', 'node', data.eUnselect)
           .off('free', 'node', data.eFree)
           .off('zoom pan', data.eZoom)
           .off('drag', 'node', data.eDrag);
@@ -438,6 +517,7 @@ module.exports = function (params, cy, api) {
         .on('tap', 'node', data.eTap)
         .on('add', 'node', data.eAdd)
         .on('select', 'node', data.eSelect)
+        .on('unselect', 'ndoe', data.eUnselect)
         .on('free', 'node', data.eFree)
         .on('zoom pan', data.eZoom)
         .on('drag', 'node', data.eDrag);
