@@ -393,9 +393,9 @@ module.exports = function (params, cy, api) {
           }
         });
 
-        cy.on('tap', 'node', data.eTap = function (event) {
-          var node = this;
-          var opts = options();
+        function cueClick(event) {
+          let node = hoveredGroup;
+          let opts = options();
           let nodeHasCue = selectedGroupsContainsGroup(node);
           if (hoveredGroup) {
             nodeHasCue = nodeHasCue || hoveredGroup._private.data.id === node._private.data.id;
@@ -407,16 +407,16 @@ module.exports = function (params, cy, api) {
             var expandcollapseRenderedEndX = expandcollapseRenderedStartX + expandcollapseRenderedRectSize;
             var expandcollapseRenderedEndY = expandcollapseRenderedStartY + expandcollapseRenderedRectSize;
                     
-                    var cyRenderedPos = event.renderedPosition || event.cyRenderedPosition;
+            var cyRenderedPos = event.renderedPosition || event.cyRenderedPosition;
             var cyRenderedPosX = cyRenderedPos.x;
             var cyRenderedPosY = cyRenderedPos.y;
             var factor = (opts.expandCollapseCueSensitivity - 1) / 2;
 
-            if ( (Math.abs(oldMousePos.x - currMousePos.x) < 5 && Math.abs(oldMousePos.y - currMousePos.y) < 5)
-              && cyRenderedPosX >= expandcollapseRenderedStartX - expandcollapseRenderedRectSize * factor
+            if (cyRenderedPosX >= expandcollapseRenderedStartX - expandcollapseRenderedRectSize * factor
               && cyRenderedPosX <= expandcollapseRenderedEndX + expandcollapseRenderedRectSize * factor
               && cyRenderedPosY >= expandcollapseRenderedStartY - expandcollapseRenderedRectSize * factor
               && cyRenderedPosY <= expandcollapseRenderedEndY + expandcollapseRenderedRectSize * factor) {
+              event.stopPropagation();
               if(opts.undoable && !ur)
                 ur = cy.undoRedo({
                   defaultActions: false
@@ -444,7 +444,62 @@ module.exports = function (params, cy, api) {
               }
             }
           }
-        });
+        }
+
+        $canvas.addEventListener('click', cueClick);
+
+        // cy.on('tap', 'node', data.eTap = function (event) {
+        //   var node = this;
+        //   var opts = options();
+        //   let nodeHasCue = selectedGroupsContainsGroup(node);
+        //   if (hoveredGroup) {
+        //     nodeHasCue = nodeHasCue || hoveredGroup._private.data.id === node._private.data.id;
+        //   }
+        //   if (nodeHasCue){
+        //     var expandcollapseRenderedStartX = node._private.data.expandcollapseRenderedStartX;
+        //     var expandcollapseRenderedStartY = node._private.data.expandcollapseRenderedStartY;
+        //     var expandcollapseRenderedRectSize = node._private.data.expandcollapseRenderedCueSize;
+        //     var expandcollapseRenderedEndX = expandcollapseRenderedStartX + expandcollapseRenderedRectSize;
+        //     var expandcollapseRenderedEndY = expandcollapseRenderedStartY + expandcollapseRenderedRectSize;
+                    
+        //             var cyRenderedPos = event.renderedPosition || event.cyRenderedPosition;
+        //     var cyRenderedPosX = cyRenderedPos.x;
+        //     var cyRenderedPosY = cyRenderedPos.y;
+        //     var factor = (opts.expandCollapseCueSensitivity - 1) / 2;
+
+        //     if ( (Math.abs(oldMousePos.x - currMousePos.x) < 5 && Math.abs(oldMousePos.y - currMousePos.y) < 5)
+        //       && cyRenderedPosX >= expandcollapseRenderedStartX - expandcollapseRenderedRectSize * factor
+        //       && cyRenderedPosX <= expandcollapseRenderedEndX + expandcollapseRenderedRectSize * factor
+        //       && cyRenderedPosY >= expandcollapseRenderedStartY - expandcollapseRenderedRectSize * factor
+        //       && cyRenderedPosY <= expandcollapseRenderedEndY + expandcollapseRenderedRectSize * factor) {
+        //       if(opts.undoable && !ur)
+        //         ur = cy.undoRedo({
+        //           defaultActions: false
+        //         });
+        //       if(api.isCollapsible(node))
+        //         if (opts.undoable){
+        //           ur.do("collapse", {
+        //             nodes: node,
+        //             options: opts
+        //           });
+        //         }
+        //         else
+        //           api.collapse(node, opts);
+        //       else if(api.isExpandable(node))
+        //         if (opts.undoable)
+        //           ur.do("expand", {
+        //             nodes: node,
+        //             options: opts
+        //           });
+        //         else
+        //           api.expand(node, opts);
+        //       if (options().appearOnGroupSelect) {
+        //         clearDraws();
+        //         drawCuesForSelectedGroups();
+        //       }
+        //     }
+        //   }
+        // });
       }
 
       // write options to data
@@ -480,6 +535,7 @@ module.exports = function (params, cy, api) {
           .off('drag', 'node', data.eDrag);
 
       window.removeEventListener('resize', data.eWindowResize);
+      $canvas.removeEventListener('click', cueClick);
     },
     rebind: function () {
       var data = getData();
@@ -507,6 +563,7 @@ module.exports = function (params, cy, api) {
         .on('drag', 'node', data.eDrag);
 
       window.addEventListener('resize', data.eWindowResize);
+      $canvas.addEventListener('click', cueClick);
     }
   };
 
