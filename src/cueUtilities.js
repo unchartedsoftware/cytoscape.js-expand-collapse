@@ -407,9 +407,9 @@ module.exports = function (params, cy, api) {
             var expandcollapseRenderedEndX = expandcollapseRenderedStartX + expandcollapseRenderedRectSize;
             var expandcollapseRenderedEndY = expandcollapseRenderedStartY + expandcollapseRenderedRectSize;
                     
-            var cyRenderedPos = event.renderedPosition || event.cyRenderedPosition;
-            var cyRenderedPosX = cyRenderedPos.x;
-            var cyRenderedPosY = cyRenderedPos.y;
+            // var cyRenderedPos = event.renderedPosition || event.cyRenderedPosition;
+            var cyRenderedPosX = event.clientX;//cyRenderedPos.x;
+            var cyRenderedPosY = event.clientY;//cyRenderedPos.y;
             var factor = (opts.expandCollapseCueSensitivity - 1) / 2;
 
             if (cyRenderedPosX >= expandcollapseRenderedStartX - expandcollapseRenderedRectSize * factor
