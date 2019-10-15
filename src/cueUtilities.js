@@ -100,22 +100,22 @@ module.exports = function (params, cy, api) {
       }
 
       function drawCuesForSelectedGroups() {
-        selectedGroups = selectedGroups.map(group => drawExpandCollapseCue(group));
+        selectedGroups = selectedGroups.map(group =>  {
+          drawExpandCollapseCue(group);
+          return group
+        });
       }
 
-      function removeGroup(node) {
-        selectedGroups = selectedGroups.filter(group => group._private.data.id !== node._private.data.id);
+      function removeGroupFromSelectedGroups(node) {
+        selectedGroups = selectedGroups.filter(group => group.id() !== node.id());
       }
 
       function mouseIsHoveringOver(node) {
-        return hoveredGroup && hoveredGroup._private.data.id === node._private.data.id;
+        return hoveredGroup && hoveredGroup.id() === node.id();
       }
 
       function isAGroup(node) {
-        const children = node.children();
-        const collapsedChildren = node._private.data.collapsedChildren;
-        const hasChildren = children != null && children.length > 0;
-        return hasChildren || !(collapsedChildren == null);
+        return api.isCollapsible(node) || api.isExpandable(node);
       }
 
       function drawExpandCollapseCue(node) {
@@ -139,45 +139,27 @@ module.exports = function (params, cy, api) {
 
         var expandcollapseCenterX;
         var expandcollapseCenterY;
-        var cueCenter;
+        var cueCenter = {
+          x: 0,
+          y: 0
+        };
 
+        const offset = 1;
+        const size = cy.zoom() < 1 ? rectSize / (2*cy.zoom()) : rectSize / 2;
         if (options().expandCollapseCuePosition === 'top-left') {
-          var offset = 1;
-          var size = cy.zoom() < 1 ? rectSize / (2*cy.zoom()) : rectSize / 2;
-
-          var x = node.position('x') - node.width() / 2 - parseFloat(node.css('padding-left'))
+          cueCenter.x = node.position('x') - node.width() / 2 - parseFloat(node.css('padding-left'))
                   + parseFloat(node.css('border-width')) + size + offset;
-          var y = node.position('y') - node.height() / 2 - parseFloat(node.css('padding-top'))
+          cueCenter.y = node.position('y') - node.height() / 2 - parseFloat(node.css('padding-top'))
                   + parseFloat(node.css('border-width')) + size + offset;
-
-          cueCenter = {
-            x : x,
-            y : y
-          };
         } else if (options().expandCollapseCuePosition === 'top-right') {
-          var offset = 1;
-          var size = cy.zoom() < 1 ? rectSize / (2*cy.zoom()) : rectSize / 2;
-
-          var x = node.position('x') + node.width() / 2 + parseFloat(node.css('padding-left'))
+          cueCenter.x = node.position('x') + node.width() / 2 + parseFloat(node.css('padding-left'))
                   - parseFloat(node.css('border-width')) - size - offset;
-          var y = node.position('y') - node.height() / 2 - parseFloat(node.css('padding-top'))
+          cueCenter.y = node.position('y') - node.height() / 2 - parseFloat(node.css('padding-top'))
                   + parseFloat(node.css('border-width')) + size + offset;
-
-          cueCenter = {
-            x : x,
-            y : y
-          };
         } else if (options().expandCollapseCuePosition === 'top-center') {
-          var offset = 1;
-          var size = cy.zoom() < 1 ? rectSize / (2*cy.zoom()) : rectSize / 2;
-
-          const x = node.position('x');
-          const y = node.position('y') - node.height() / 2 - parseFloat(node.css('padding-top'))
+          cueCenter.x = node.position('x');
+          cueCenter.y = node.position('y') - node.height() / 2 - parseFloat(node.css('padding-top'))
                  + parseFloat(node.css('border-width')) + size + offset;
-          cueCenter = {
-            x: x,
-            y: y
-          };
         } else {
           var option = options().expandCollapseCuePosition;
           cueCenter = typeof option === 'function' ? option.call(this, node) : option;
@@ -241,8 +223,6 @@ module.exports = function (params, cy, api) {
         node._private.data.expandcollapseRenderedStartX = expandcollapseStartX;
         node._private.data.expandcollapseRenderedStartY = expandcollapseStartY;
         node._private.data.expandcollapseRenderedCueSize = expandcollapseRectSize;
-
-        return node;
       }
 
       {
@@ -262,35 +242,16 @@ module.exports = function (params, cy, api) {
           }
         });
 
-        // check if mouse is inside given node
-        var isInsideCompound = function(node, e){
-          if (node){
-            var currMousePos = e.position || e.cyPosition;
-            var topLeft = {
-              x: (node.position("x") - node.width() / 2 - parseFloat(node.css('padding-left'))),
-              y: (node.position("y") - node.height() / 2 - parseFloat(node.css('padding-top')))};
-            var bottomRight = {
-              x: (node.position("x") + node.width() / 2 + parseFloat(node.css('padding-right'))),
-              y: (node.position("y") + node.height() / 2+ parseFloat(node.css('padding-bottom')))};
-
-            if (currMousePos.x >= topLeft.x && currMousePos.y >= topLeft.y &&
-              currMousePos.x <= bottomRight.x && currMousePos.y <= bottomRight.y){
-              return true;
-            }
-          }
-          return false;
-        };
-
         function selectedGroupsContainsGroup(group) {
           for (let i = 0; i < selectedGroups.length; i++) {
-            if (selectedGroups[i]._private.data.id === group._private.data.id) {
+            if (selectedGroups[i].id() === group.id()) {
               return true;
             }
           }
           return false;
         }
 
-        cy.on('mouseout', 'node', data.eMouseMove = function(e) {
+        cy.on('mouseout', 'node', data.eMouseOut = function(e) {
           let node = this;
           if (mouseIsHoveringOver(node)) {
             clearDraws();
@@ -303,17 +264,18 @@ module.exports = function (params, cy, api) {
           let node = this;
           if (isAGroup(node)) {
             // clear draws if any
-            if (api.isCollapsible(node) || api.isExpandable(node)){
-              if ( hoveredGroup && hoveredGroup.id() != node.id() ) {
-                clearDraws();
-                if (options().appearOnGroupSelect) {
-                  drawCuesForSelectedGroups();
-                }
-              }
-              if (node && !selectedGroupsContainsGroup(node)) {
-                hoveredGroup = drawExpandCollapseCue(node);
+            // if (api.isCollapsible(node) || api.isExpandable(node)){
+            if ( hoveredGroup && hoveredGroup.id() != node.id() ) {
+              clearDraws();
+              if (options().appearOnGroupSelect) {
+                drawCuesForSelectedGroups();
               }
             }
+            if (!selectedGroupsContainsGroup(node)) {
+              drawExpandCollapseCue(node);
+              hoveredGroup = node;
+            }
+            // }
           } else {
             // needed incase we hover over a regular node inside a group
             clearDraws();
@@ -361,12 +323,13 @@ module.exports = function (params, cy, api) {
 
           if (options().appearOnGroupSelect) {
             let node = this;
-            // selected group should not be hovered group;
+
             if (mouseIsHoveringOver(node)) {
               hoveredGroup = null;
             }
             if (isAGroup(node) && !selectedGroupsContainsGroup(node)) {
-              selectedGroups.push(drawExpandCollapseCue(node));
+              drawExpandCollapseCue(node);
+              selectedGroups.push(node);
             }
           }
         });
@@ -375,9 +338,9 @@ module.exports = function (params, cy, api) {
           if (options().appearOnGroupSelect) {
             let node = this;
             clearDraws();
-            // hoveredGroup = null;
+
             if (node) {
-              removeGroup(node);
+              removeGroupFromSelectedGroups(node);
               drawCuesForSelectedGroups();
             }
           }
@@ -388,7 +351,7 @@ module.exports = function (params, cy, api) {
             clearDraws();
             drawCuesForSelectedGroups();
             if (hoveredGroupExistsAndNotInSelectedGroup()) {
-              hoveredGroup = drawExpandCollapseCue(hoveredGroup);
+              drawExpandCollapseCue(hoveredGroup);
             }
           }
         });
@@ -398,7 +361,7 @@ module.exports = function (params, cy, api) {
           var opts = options();
           let nodeHasCue = selectedGroupsContainsGroup(node);
           if (hoveredGroup) {
-            nodeHasCue = nodeHasCue || hoveredGroup._private.data.id === node._private.data.id;
+            nodeHasCue = nodeHasCue || hoveredGroup.id() === node.id();
           }
           if (nodeHasCue){
             var expandcollapseRenderedStartX = node._private.data.expandcollapseRenderedStartX;
@@ -463,7 +426,7 @@ module.exports = function (params, cy, api) {
         cy.trigger('expandcollapse.clearvisualcue');
 
         cy.off('mouseover', 'node', data.eMouseOver)
-          .off('mouseout', 'node', data.eMouseMove)
+          .off('mouseout', 'node', data.eMouseOut)
           .off('mousemove', 'node', data.eMouseMove)
           .off('mousedown', 'node', data.eMouseDown)
           .off('mouseup', 'node', data.eMouseUp)
@@ -490,7 +453,7 @@ module.exports = function (params, cy, api) {
       }
 
       cy.on('mouseover', 'node', data.eMouseOver)
-        .on('mouseout', 'node', data.eMouseMove)
+        .on('mouseout', 'node', data.eMouseOut)
         .on('mousemove', 'node', data.eMouseMove)
         .on('mousedown', 'node', data.eMouseDown)
         .on('mouseup', 'node', data.eMouseUp)
