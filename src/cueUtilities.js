@@ -262,25 +262,6 @@ module.exports = function (params, cy, api) {
           }
         });
 
-        // check if mouse is inside given node
-        var isInsideCompound = function(node, e){
-          if (node){
-            var currMousePos = e.position || e.cyPosition;
-            var topLeft = {
-              x: (node.position("x") - node.width() / 2 - parseFloat(node.css('padding-left'))),
-              y: (node.position("y") - node.height() / 2 - parseFloat(node.css('padding-top')))};
-            var bottomRight = {
-              x: (node.position("x") + node.width() / 2 + parseFloat(node.css('padding-right'))),
-              y: (node.position("y") + node.height() / 2+ parseFloat(node.css('padding-bottom')))};
-
-            if (currMousePos.x >= topLeft.x && currMousePos.y >= topLeft.y &&
-              currMousePos.x <= bottomRight.x && currMousePos.y <= bottomRight.y){
-              return true;
-            }
-          }
-          return false;
-        };
-
         function selectedGroupsContainsGroup(group) {
           for (let i = 0; i < selectedGroups.length; i++) {
             if (selectedGroups[i]._private.data.id === group._private.data.id) {
@@ -290,11 +271,13 @@ module.exports = function (params, cy, api) {
           return false;
         }
 
-        cy.on('mouseout', 'node', data.eMouseMove = function(e) {
+        cy.on('mouseout', 'node', data.eMouseOut = function(e) {
           let node = this;
           if (mouseIsHoveringOver(node)) {
             clearDraws();
-            hoveredGroup = null;
+            if (!selectedGroupsContainsGroup(hoveredGroup)) {
+              hoveredGroup = null;
+            }
             drawCuesForSelectedGroups();
           }
         });
@@ -303,17 +286,22 @@ module.exports = function (params, cy, api) {
           let node = this;
           if (isAGroup(node)) {
             // clear draws if any
-            if (api.isCollapsible(node) || api.isExpandable(node)){
-              if ( hoveredGroup && hoveredGroup.id() != node.id() ) {
-                clearDraws();
-                if (options().appearOnGroupSelect) {
-                  drawCuesForSelectedGroups();
-                }
-              }
-              if (node && !selectedGroupsContainsGroup(node)) {
-                hoveredGroup = drawExpandCollapseCue(node);
+            // if (api.isCollapsible(node) || api.isExpandable(node)){
+            if ( hoveredGroup && hoveredGroup.id() != node.id() ) {
+              clearDraws();
+              if (options().appearOnGroupSelect) {
+                drawCuesForSelectedGroups();
               }
             }
+            if (node) {
+              if (!selectedGroupsContainsGroup(node)) {
+                hoveredGroup = drawExpandCollapseCue(node);
+              }
+              else {
+                hoveredGroup = node;
+              }
+            }
+            // }
           } else {
             // needed incase we hover over a regular node inside a group
             clearDraws();
@@ -361,12 +349,16 @@ module.exports = function (params, cy, api) {
 
           if (options().appearOnGroupSelect) {
             let node = this;
-            // selected group should not be hovered group;
-            if (mouseIsHoveringOver(node)) {
-              hoveredGroup = null;
-            }
-            if (isAGroup(node) && !selectedGroupsContainsGroup(node)) {
-              selectedGroups.push(drawExpandCollapseCue(node));
+            // if (mouseIsHoveringOver(node)) {
+            //   hoveredGroup = null;
+            // }
+            if (isAGroup(node)) {
+              if (!selectedGroupsContainsGroup(node) && hoveredGroup) {
+                selectedGroups.push(hoveredGroup);
+              }
+              else if (!selectedGroupsContainsGroup(node) && !hoveredGroup) {
+                selectedGroups.push(drawExpandCollapseCue(node));
+              }
             }
           }
         });
@@ -396,26 +388,17 @@ module.exports = function (params, cy, api) {
         function cueClick(event) {
           let node = hoveredGroup;
           let opts = options();
-          let nodeHasCue = selectedGroupsContainsGroup(node);
-          if (hoveredGroup) {
-            nodeHasCue = nodeHasCue || hoveredGroup._private.data.id === node._private.data.id;
-          }
-          if (nodeHasCue){
+
+          if (node){
+
             var expandcollapseRenderedStartX = node._private.data.expandcollapseRenderedStartX;
             var expandcollapseRenderedStartY = node._private.data.expandcollapseRenderedStartY;
             var expandcollapseRenderedRectSize = node._private.data.expandcollapseRenderedCueSize;
             var expandcollapseRenderedEndX = expandcollapseRenderedStartX + expandcollapseRenderedRectSize;
             var expandcollapseRenderedEndY = expandcollapseRenderedStartY + expandcollapseRenderedRectSize;
-                    
-            // var cyRenderedPos = event.renderedPosition || event.cyRenderedPosition;
-            var cyRenderedPosX = event.clientX;//cyRenderedPos.x;
-            var cyRenderedPosY = event.clientY;//cyRenderedPos.y;
-            var factor = (opts.expandCollapseCueSensitivity - 1) / 2;
+            if (event.offsetX >= expandcollapseRenderedStartX && event.offsetX <= expandcollapseRenderedEndX &&
+                event.offsetY >= expandcollapseRenderedStartY && event.offsetY <= expandcollapseRenderedEndY) {
 
-            if (cyRenderedPosX >= expandcollapseRenderedStartX - expandcollapseRenderedRectSize * factor
-              && cyRenderedPosX <= expandcollapseRenderedEndX + expandcollapseRenderedRectSize * factor
-              && cyRenderedPosY >= expandcollapseRenderedStartY - expandcollapseRenderedRectSize * factor
-              && cyRenderedPosY <= expandcollapseRenderedEndY + expandcollapseRenderedRectSize * factor) {
               event.stopPropagation();
               if(opts.undoable && !ur)
                 ur = cy.undoRedo({
@@ -518,7 +501,7 @@ module.exports = function (params, cy, api) {
         cy.trigger('expandcollapse.clearvisualcue');
 
         cy.off('mouseover', 'node', data.eMouseOver)
-          .off('mouseout', 'node', data.eMouseMove)
+          .off('mouseout', 'node', data.eMouseOut)
           .off('mousemove', 'node', data.eMouseMove)
           .off('mousedown', 'node', data.eMouseDown)
           .off('mouseup', 'node', data.eMouseUp)
@@ -546,7 +529,7 @@ module.exports = function (params, cy, api) {
       }
 
       cy.on('mouseover', 'node', data.eMouseOver)
-        .on('mouseout', 'node', data.eMouseMove)
+        .on('mouseout', 'node', data.eMouseOut)
         .on('mousemove', 'node', data.eMouseMove)
         .on('mousedown', 'node', data.eMouseDown)
         .on('mouseup', 'node', data.eMouseUp)
