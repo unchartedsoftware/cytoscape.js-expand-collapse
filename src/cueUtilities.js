@@ -107,6 +107,10 @@ module.exports = function (params, cy, api) {
         selectedGroups = selectedGroups.filter(group => group._private.data.id !== node._private.data.id);
       }
 
+      function mouseIsHoveringOver(node) {
+        return hoveredGroup && hoveredGroup._private.data.id === node._private.data.id;
+      }
+
       function isAGroup(node) {
         const children = node.children();
         const collapsedChildren = node._private.data.collapsedChildren;
@@ -288,7 +292,7 @@ module.exports = function (params, cy, api) {
 
         cy.on('mouseout', 'node', data.eMouseMove = function(e) {
           let node = this;
-          if (hoveredGroup && hoveredGroup._private.data.id === node._private.data.id) {
+          if (mouseIsHoveringOver(node)) {
             clearDraws();
             hoveredGroup = null;
             drawCuesForSelectedGroups();
@@ -358,7 +362,7 @@ module.exports = function (params, cy, api) {
           if (options().appearOnGroupSelect) {
             let node = this;
             // selected group should not be hovered group;
-            if (hoveredGroup && node._private.data.id === hoveredGroup._private.data.id) {
+            if (mouseIsHoveringOver(node)) {
               hoveredGroup = null;
             }
             if (isAGroup(node) && !selectedGroupsContainsGroup(node)) {
