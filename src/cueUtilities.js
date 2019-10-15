@@ -293,9 +293,6 @@ module.exports = function (params, cy, api) {
             hoveredGroup = null;
             drawCuesForSelectedGroups();
           }
-          // else if (selectedGroupsContainsGroup(node)) {
-          //   removeGroup(node);
-          // }
         });
 
         cy.on('mouseover', 'node', data.eMouseOver = function (e) {
