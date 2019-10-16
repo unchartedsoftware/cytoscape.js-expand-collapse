@@ -333,6 +333,10 @@ module.exports = function (params, cy, api) {
           if (options().appearOnGroupSelect) {
             let node = this;
             if (isAGroup(node)) {
+              // if (hoveredGroup && hoveredGroup.id() === node.id() && !selectedGroupsContainsGroup(node)) {
+              //   this.unselect();
+              //   return;
+              // }
               if (!selectedGroupsContainsGroup(node) && hoveredGroup) {
                 selectedGroups.push(hoveredGroup);
               }
