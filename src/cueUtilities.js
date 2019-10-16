@@ -338,7 +338,8 @@ module.exports = function (params, cy, api) {
                 selectedGroups.push(hoveredGroup);
               }
               else if (!selectedGroupsContainsGroup(node) && !hoveredGroup) {
-                selectedGroups.push(drawExpandCollapseCue(node));
+                drawExpandCollapseCue(node);
+                selectedGroups.push(node);
               }
             }
           }
