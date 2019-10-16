@@ -272,15 +272,15 @@ module.exports = function (params, cy, api) {
                 drawCuesForSelectedGroups();
               }
             }
-            if (node) {
-              if (!selectedGroupsContainsGroup(node)) {
-                drawExpandCollapseCue(node);
-                // hoveredGroup = node;
-              }
-              // else {
-              hoveredGroup = node;
-              // }
-            }
+            // if (node) {
+            //   if (!selectedGroupsContainsGroup(node)) {
+            //     drawExpandCollapseCue(node);
+            //     // hoveredGroup = node;
+            //   }
+            //   // else {
+            //   hoveredGroup = node;
+            //   // }
+            // }
             if (!selectedGroupsContainsGroup(node)) {
               drawExpandCollapseCue(node);
               hoveredGroup = node;
