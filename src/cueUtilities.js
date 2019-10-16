@@ -274,11 +274,12 @@ module.exports = function (params, cy, api) {
             }
             if (node) {
               if (!selectedGroupsContainsGroup(node)) {
-                hoveredGroup = drawExpandCollapseCue(node);
+                drawExpandCollapseCue(node);
+                // hoveredGroup = node;
               }
-              else {
-                hoveredGroup = node;
-              }
+              // else {
+              hoveredGroup = node;
+              // }
             }
             if (!selectedGroupsContainsGroup(node)) {
               drawExpandCollapseCue(node);
