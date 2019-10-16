@@ -269,15 +269,7 @@ module.exports = function (params, cy, api) {
                 drawCuesForSelectedGroups();
               }
             }
-            // if (node) {
-            //   if (!selectedGroupsContainsGroup(node)) {
-            //     drawExpandCollapseCue(node);
-            //     // hoveredGroup = node;
-            //   }
-            //   // else {
-            //   hoveredGroup = node;
-            //   // }
-            // }
+
             if (!selectedGroupsContainsGroup(node)) {
               drawExpandCollapseCue(node);
               hoveredGroup = node;
@@ -330,16 +322,14 @@ module.exports = function (params, cy, api) {
           if (options().appearOnGroupSelect) {
             let node = this;
             if (isAGroup(node)) {
-              // if (hoveredGroup && hoveredGroup.id() === node.id() && !selectedGroupsContainsGroup(node)) {
-              //   this.unselect();
-              //   return;
-              // }
-              if (!selectedGroupsContainsGroup(node) && hoveredGroup) {
-                selectedGroups.push(hoveredGroup);
-              }
-              else if (!selectedGroupsContainsGroup(node) && !hoveredGroup) {
-                drawExpandCollapseCue(node);
-                selectedGroups.push(node);
+              if (!selectedGroupsContainsGroup(node)) {
+                if (hoveredGroup) {
+                  selectedGroups.push(hoveredGroup);
+                }
+                else {
+                  drawExpandCollapseCue(node);
+                  selectedGroups.push(node);
+                }
               }
             }
           }
@@ -367,20 +357,23 @@ module.exports = function (params, cy, api) {
           }
         });
 
+        function clickedOnCueRegion(node, event) {
+          const expandcollapseRenderedStartX = node._private.data.expandcollapseRenderedStartX;
+          const expandcollapseRenderedStartY = node._private.data.expandcollapseRenderedStartY;
+          const expandcollapseRenderedRectSize = node._private.data.expandcollapseRenderedCueSize;
+          const expandcollapseRenderedEndX = expandcollapseRenderedStartX + expandcollapseRenderedRectSize;
+          const expandcollapseRenderedEndY = expandcollapseRenderedStartY + expandcollapseRenderedRectSize;
+
+          return event.offsetX >= expandcollapseRenderedStartX && event.offsetX <= expandcollapseRenderedEndX &&
+                  event.offsetY >= expandcollapseRenderedStartY && event.offsetY <= expandcollapseRenderedEndY;
+        }
+
         function cueClick(event) {
           let node = hoveredGroup;
           let opts = options();
 
           if (node){
-
-            var expandcollapseRenderedStartX = node._private.data.expandcollapseRenderedStartX;
-            var expandcollapseRenderedStartY = node._private.data.expandcollapseRenderedStartY;
-            var expandcollapseRenderedRectSize = node._private.data.expandcollapseRenderedCueSize;
-            var expandcollapseRenderedEndX = expandcollapseRenderedStartX + expandcollapseRenderedRectSize;
-            var expandcollapseRenderedEndY = expandcollapseRenderedStartY + expandcollapseRenderedRectSize;
-            if (event.offsetX >= expandcollapseRenderedStartX && event.offsetX <= expandcollapseRenderedEndX &&
-                event.offsetY >= expandcollapseRenderedStartY && event.offsetY <= expandcollapseRenderedEndY) {
-
+            if (clickedOnCueRegion(node, event)) {
               event.stopPropagation();
               if(opts.undoable && !ur)
                 ur = cy.undoRedo({
@@ -415,60 +408,9 @@ module.exports = function (params, cy, api) {
           }
         }
 
+        $canvas.addEventListener('mousedown', cueClick);
+        $canvas.addEventListener('mouseup', cueClick);
         $canvas.addEventListener('click', cueClick);
-
-        // cy.on('tap', 'node', data.eTap = function (event) {
-        //   var node = this;
-        //   var opts = options();
-        //   let nodeHasCue = selectedGroupsContainsGroup(node);
-        //   if (hoveredGroup) {
-        //     nodeHasCue = nodeHasCue || hoveredGroup._private.data.id === node._private.data.id;
-        //   }
-        //   if (nodeHasCue){
-        //     var expandcollapseRenderedStartX = node._private.data.expandcollapseRenderedStartX;
-        //     var expandcollapseRenderedStartY = node._private.data.expandcollapseRenderedStartY;
-        //     var expandcollapseRenderedRectSize = node._private.data.expandcollapseRenderedCueSize;
-        //     var expandcollapseRenderedEndX = expandcollapseRenderedStartX + expandcollapseRenderedRectSize;
-        //     var expandcollapseRenderedEndY = expandcollapseRenderedStartY + expandcollapseRenderedRectSize;
-                    
-        //             var cyRenderedPos = event.renderedPosition || event.cyRenderedPosition;
-        //     var cyRenderedPosX = cyRenderedPos.x;
-        //     var cyRenderedPosY = cyRenderedPos.y;
-        //     var factor = (opts.expandCollapseCueSensitivity - 1) / 2;
-
-        //     if ( (Math.abs(oldMousePos.x - currMousePos.x) < 5 && Math.abs(oldMousePos.y - currMousePos.y) < 5)
-        //       && cyRenderedPosX >= expandcollapseRenderedStartX - expandcollapseRenderedRectSize * factor
-        //       && cyRenderedPosX <= expandcollapseRenderedEndX + expandcollapseRenderedRectSize * factor
-        //       && cyRenderedPosY >= expandcollapseRenderedStartY - expandcollapseRenderedRectSize * factor
-        //       && cyRenderedPosY <= expandcollapseRenderedEndY + expandcollapseRenderedRectSize * factor) {
-        //       if(opts.undoable && !ur)
-        //         ur = cy.undoRedo({
-        //           defaultActions: false
-        //         });
-        //       if(api.isCollapsible(node))
-        //         if (opts.undoable){
-        //           ur.do("collapse", {
-        //             nodes: node,
-        //             options: opts
-        //           });
-        //         }
-        //         else
-        //           api.collapse(node, opts);
-        //       else if(api.isExpandable(node))
-        //         if (opts.undoable)
-        //           ur.do("expand", {
-        //             nodes: node,
-        //             options: opts
-        //           });
-        //         else
-        //           api.expand(node, opts);
-        //       if (options().appearOnGroupSelect) {
-        //         clearDraws();
-        //         drawCuesForSelectedGroups();
-        //       }
-        //     }
-        //   }
-        // });
       }
 
       // write options to data
@@ -503,6 +445,8 @@ module.exports = function (params, cy, api) {
           .off('drag', 'node', data.eDrag);
 
       window.removeEventListener('resize', data.eWindowResize);
+      $canvas.removeEventListener('mousedown', cueClick);
+      $canvas.removeEventListener('mouseup', cueClick);
       $canvas.removeEventListener('click', cueClick);
     },
     rebind: function () {
@@ -530,6 +474,8 @@ module.exports = function (params, cy, api) {
         .on('drag', 'node', data.eDrag);
 
       window.addEventListener('resize', data.eWindowResize);
+      $canvas.addEventListener('mousedown', cueClick);
+      $canvas.addEventListener('mouseup', cueClick);
       $canvas.addEventListener('click', cueClick);
     }
   };
