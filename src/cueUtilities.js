@@ -264,7 +264,6 @@ module.exports = function (params, cy, api) {
           let node = this;
           if (isAGroup(node)) {
             // clear draws if any
-            // if (api.isCollapsible(node) || api.isExpandable(node)){
             if ( hoveredGroup && hoveredGroup.id() != node.id() ) {
               clearDraws();
               if (options().appearOnGroupSelect) {
@@ -275,7 +274,6 @@ module.exports = function (params, cy, api) {
               drawExpandCollapseCue(node);
               hoveredGroup = node;
             }
-            // }
           } else {
             // needed incase we hover over a regular node inside a group
             clearDraws();
@@ -403,7 +401,8 @@ module.exports = function (params, cy, api) {
                   api.expand(node, opts);
               if (options().appearOnGroupSelect) {
                 clearDraws();
-                if (hoveredGroup && api.isCollapsible(node)) {
+                // needed if we expand a group but we are still hovering over it to draw it's cue
+                if (hoveredGroup && api.isCollapsible(node) && !selectedGroupsContainsGroup(hoveredGroup)) {
                   drawExpandCollapseCue(hoveredGroup);
                 }
                 drawCuesForSelectedGroups();
