@@ -100,10 +100,7 @@ module.exports = function (params, cy, api) {
       }
 
       function drawCuesForSelectedGroups() {
-        selectedGroups = selectedGroups.map(group =>  {
-          drawExpandCollapseCue(group);
-          return group
-        });
+        selectedGroups.forEach(group => drawExpandCollapseCue(group))
       }
 
       function removeGroupFromSelectedGroups(node) {
