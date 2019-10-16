@@ -403,6 +403,9 @@ module.exports = function (params, cy, api) {
                   api.expand(node, opts);
               if (options().appearOnGroupSelect) {
                 clearDraws();
+                if (hoveredGroup && api.isCollapsible(node)) {
+                  drawExpandCollapseCue(hoveredGroup);
+                }
                 drawCuesForSelectedGroups();
               }
             }
