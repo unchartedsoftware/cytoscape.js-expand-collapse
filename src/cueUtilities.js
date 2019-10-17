@@ -282,14 +282,6 @@ module.exports = function (params, cy, api) {
           }
         });
 
-        var oldMousePos = null, currMousePos = null;
-        cy.on('mousedown', 'node', data.eMouseDown = function(e){
-          oldMousePos = e.renderedPosition || e.cyRenderedPosition
-        });
-        cy.on('mouseup', 'node', data.eMouseUp = function(e){
-          currMousePos = e.renderedPosition || e.cyRenderedPosition
-        });
-
         cy.on('grab', 'node', data.eGrab = function (e) {
           preventDrawing = true;
         });
@@ -408,8 +400,18 @@ module.exports = function (params, cy, api) {
           }
         }
 
-        $canvas.addEventListener('mousedown', cueClick);
-        $canvas.addEventListener('mouseup', cueClick);
+        function stopEvent(event) {
+          let node = hoveredGroup;
+          if (node && clickedOnCueRegion(node, event)){
+            event.stopPropagation();
+          }
+        }
+        $canvas.addEventListener('mousedown', function(event) {
+          stopEvent(event);
+        });
+        $canvas.addEventListener('mouseup', function(event) {
+          stopEvent(event);
+        });
         $canvas.addEventListener('click', cueClick);
       }
 
