@@ -272,8 +272,8 @@ module.exports = function (params, cy, api) {
 
             if (!selectedGroupsContainsGroup(node)) {
               drawExpandCollapseCue(node);
-              hoveredGroup = node;
             }
+            hoveredGroup = node;
           } else {
             // needed incase we hover over a regular node inside a group
             clearDraws();
