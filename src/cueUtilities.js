@@ -390,11 +390,11 @@ module.exports = function (params, cy, api) {
                   api.expand(node, opts);
               if (options().appearOnGroupSelect) {
                 clearDraws();
-                // needed if we expand a group but we are still hovering over it to draw it's cue
-                if (hoveredGroup && api.isCollapsible(node) && !selectedGroupsContainsGroup(hoveredGroup)) {
-                  drawExpandCollapseCue(hoveredGroup);
-                }
                 drawCuesForSelectedGroups();
+              }
+              // needed if we expand a group but we are still hovering over it to draw it's cue
+              if (hoveredGroup && api.isCollapsible(node) && !selectedGroupsContainsGroup(hoveredGroup)) {
+                drawExpandCollapseCue(hoveredGroup);
               }
             }
           }
