@@ -235,7 +235,7 @@ module.exports = function (params, cy, api) {
         });
 
         cy.on('zoom pan', data.eZoom = function (e) {
-          if (hoveredGroup || selectedGroups.length > 0) {
+          if (selectedGroups.length > 0) {
             clearDraws();
             if (options().appearOnGroupSelect) {
               drawCuesForSelectedGroups();
