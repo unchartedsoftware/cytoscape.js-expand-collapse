@@ -299,13 +299,6 @@ module.exports = function (params, cy, api) {
           }
         });
 
-        cy.on('remove', 'node', data.eRemove = function () {
-          if (!options().appearOnGroupSelect) {
-            clearDraws();
-            hoveredGroup = null;
-          }
-        });
-
         var ur;
         cy.on('select', 'node', data.eSelect = function(evt){
           if (this.length > cy.nodes(":selected").length)
