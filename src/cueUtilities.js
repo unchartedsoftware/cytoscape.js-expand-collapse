@@ -91,12 +91,16 @@ module.exports = function (params, cy, api) {
         ctx.clearRect(0, 0, w, h);
       }
 
+      function selectedGroupsContains(group) {
+        return selectedGroups.find(node => node.id() === group.id()) !== undefined;
+      }
+
       function anyNodeHasACue() {
         return hoveredGroup || selectedGroups.length > 0;
       }
-  
+
       function hoveredGroupExistsAndNotInSelectedGroup() {
-        return hoveredGroup && !selectedGroupsContainsGroup(hoveredGroup);
+        return hoveredGroup && !selectedGroupsContains(hoveredGroup);
       }
 
       function drawCuesForSelectedGroups() {
@@ -239,15 +243,6 @@ module.exports = function (params, cy, api) {
           }
         });
 
-        function selectedGroupsContainsGroup(group) {
-          for (let i = 0; i < selectedGroups.length; i++) {
-            if (selectedGroups[i].id() === group.id()) {
-              return true;
-            }
-          }
-          return false;
-        }
-
         cy.on('mouseout', 'node', data.eMouseOut = function(e) {
           let node = this;
           if (mouseIsHoveringOver(node)) {
@@ -267,7 +262,7 @@ module.exports = function (params, cy, api) {
                 drawCuesForSelectedGroups();
               }
             }
-            if (!selectedGroupsContainsGroup(node)) {
+            if (!selectedGroupsContains(node)) {
               drawExpandCollapseCue(node);
               hoveredGroup = node;
             }
@@ -322,7 +317,7 @@ module.exports = function (params, cy, api) {
             if (mouseIsHoveringOver(node)) {
               hoveredGroup = null;
             }
-            if (isAGroup(node) && !selectedGroupsContainsGroup(node)) {
+            if (isAGroup(node) && !selectedGroupsContains(node)) {
               drawExpandCollapseCue(node);
               selectedGroups.push(node);
             }
@@ -354,7 +349,7 @@ module.exports = function (params, cy, api) {
         cy.on('tap', 'node', data.eTap = function (event) {
           var node = this;
           var opts = options();
-          let nodeHasCue = selectedGroupsContainsGroup(node);
+          let nodeHasCue = selectedGroupsContains(node);
           if (hoveredGroup) {
             nodeHasCue = nodeHasCue || hoveredGroup.id() === node.id();
           }
@@ -401,7 +396,7 @@ module.exports = function (params, cy, api) {
                 drawCuesForSelectedGroups();
               }
               // needed if we expand a group but we are still hovering over it to draw it's cue
-              if (hoveredGroup && api.isCollapsible(node) && !selectedGroupsContainsGroup(hoveredGroup)) {
+              if (hoveredGroup && api.isCollapsible(node) && !selectedGroupsContains(hoveredGroup)) {
                 drawExpandCollapseCue(hoveredGroup);
               }
             }
