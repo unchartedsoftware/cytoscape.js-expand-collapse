@@ -226,15 +226,20 @@ module.exports = function (params, cy, api) {
         node._private.data.expandcollapseRenderedCueSize = expandcollapseRectSize;
       }
 
-      function refreshCanvasImages(drawHovered=true) {
+      function refreshCanvasImages() {
         clearDraws();
-        if (hoveredGroup && drawHovered){// && !selectedGroupsContains(hoveredGroup)) {
+        if (hoveredGroup && !selectedGroupsContains(hoveredGroup)){
           drawExpandCollapseCue(hoveredGroup);
         }
         if (options().appearOnGroupSelect) {
           drawCuesForSelectedGroups();
         }
       }
+
+      function hoveringOverDifferentGroup(node) {
+        return hoveredGroup.id() !== node.id();
+      }
+
       {
         cy.on('expandcollapse.clearvisualcue', function() {
 
@@ -253,6 +258,7 @@ module.exports = function (params, cy, api) {
           let node = this;
           if (mouseIsHoveringOver(node)) {
             // Potential bug: hoveredGroup is not set to null if we go onto whiteboard, probably need to change mouseover and remove 'node'
+            // currently is not a problem as leftover hoveredGroup won't be used and will be reset
             if (!selectedGroupsContains(hoveredGroup)) {
               hoveredGroup = null;
             }
@@ -321,9 +327,6 @@ module.exports = function (params, cy, api) {
           }
         });
 
-        function hoveringOverDifferentGroup(node) {
-          return hoveredGroup.id() !== node.id();
-        }
         cy.on('unselect', 'node', data.eUnselect = function(evt) {
           if (options().appearOnGroupSelect) {
             let node = this;
