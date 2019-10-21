@@ -257,7 +257,7 @@ module.exports = function (params, cy, api) {
         cy.on('mouseout', 'node', data.eMouseOut = function(e) {
           let node = this;
           if (mouseIsHoveringOver(node)) {
-            // Potential bug: hoveredGroup is not set to null if we go onto whiteboard, probably need to change mouseover and remove 'node'
+            // note: hoveredGroup is not set to null if we go onto whiteboard, probably need to change mouseover and remove 'node'
             // currently is not a problem as leftover hoveredGroup won't be used and will be reset
             if (!selectedGroupsContains(hoveredGroup)) {
               hoveredGroup = null;
