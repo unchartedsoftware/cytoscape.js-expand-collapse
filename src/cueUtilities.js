@@ -226,9 +226,9 @@ module.exports = function (params, cy, api) {
         node._private.data.expandcollapseRenderedCueSize = expandcollapseRectSize;
       }
 
-      function refreshCanvasImages() {
+      function refreshCanvasImages(drawHovered=true) {
         clearDraws();
-        if (hoveredGroup) {
+        if (hoveredGroup && drawHovered){// && !selectedGroupsContains(hoveredGroup)) {
           drawExpandCollapseCue(hoveredGroup);
         }
         if (options().appearOnGroupSelect) {
@@ -252,7 +252,10 @@ module.exports = function (params, cy, api) {
         cy.on('mouseout', 'node', data.eMouseOut = function(e) {
           let node = this;
           if (mouseIsHoveringOver(node)) {
-            hoveredGroup = null;
+            // Potential bug: hoveredGroup is not set to null if we go onto whiteboard, probably need to change mouseover and remove 'node'
+            if (!selectedGroupsContains(hoveredGroup)) {
+              hoveredGroup = null;
+            }
             refreshCanvasImages();
           }
         });
@@ -261,7 +264,7 @@ module.exports = function (params, cy, api) {
           let node = this;
           if (isAGroup(node)) {
             // clear draws if any
-            if ( hoveredGroup && hoveredGroup.id() != node.id() ) {
+            if ( hoveredGroup && hoveredGroup.id() !== node.id() ) {
               refreshCanvasImages();
             }
             if (!selectedGroupsContains(node)) {
@@ -318,10 +321,18 @@ module.exports = function (params, cy, api) {
           }
         });
 
+        function hoveringOverDifferentGroup(node) {
+          return hoveredGroup.id() !== node.id();
+        }
         cy.on('unselect', 'node', data.eUnselect = function(evt) {
           if (options().appearOnGroupSelect) {
             let node = this;
             // clearDraws();
+
+            if (hoveredGroup && !hoveringOverDifferentGroup(node)) {
+              hoveredGroup = null;
+            }
+
             removeGroupFromSelectedGroups(node);
             refreshCanvasImages();
           }
@@ -373,6 +384,9 @@ module.exports = function (params, cy, api) {
                 else
                   api.expand(node, opts);
               if (options().appearOnGroupSelect) {
+                if (hoveredGroup && api.isExpandable(node)) {
+                  hoveredGroup = null;
+                }
                 refreshCanvasImages();
               }
               // needed if we expand a group but we are still hovering over it to draw it's cue
