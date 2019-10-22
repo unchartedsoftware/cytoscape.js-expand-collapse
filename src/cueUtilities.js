@@ -111,7 +111,7 @@ module.exports = function (params, cy, api) {
         selectedGroups = selectedGroups.filter(group => group.id() !== node.id());
       }
 
-      function mouseIsHoveringOver(node) {
+      function isMouseHoveringOver(node) {
         return hoveredGroup && hoveredGroup.id() === node.id();
       }
 
@@ -251,7 +251,7 @@ module.exports = function (params, cy, api) {
 
         cy.on('mouseout', 'node', data.eMouseOut = function(e) {
           let node = this;
-          if (mouseIsHoveringOver(node)) {
+          if (isMouseHoveringOver(node)) {
             hoveredGroup = null;
             refreshCanvasImages();
           }
@@ -259,21 +259,13 @@ module.exports = function (params, cy, api) {
 
         cy.on('mouseover', 'node', data.eMouseOver = function (e) {
           let node = this;
-          if (isAGroup(node)) {
-            // clear draws if any
-            if ( hoveredGroup && hoveredGroup.id() != node.id() ) {
-
-              refreshCanvasImages();
-            }
-            if (!selectedGroupsContains(node)) {
-              drawExpandCollapseCue(node);
-              hoveredGroup = node;
-            }
+          if (isAGroup(node) && !selectedGroupsContains(node)) {
+            hoveredGroup = node;
           } else {
             // needed incase we hover over a regular node inside a group
             hoveredGroup = null;
-            refreshCanvasImages();
           }
+          refreshCanvasImages();
         });
 
         var oldMousePos = null, currMousePos = null;
@@ -306,20 +298,19 @@ module.exports = function (params, cy, api) {
           if (options().appearOnGroupSelect) {
             let node = this;
 
-            if (mouseIsHoveringOver(node)) {
+            if (isMouseHoveringOver(node)) {
               hoveredGroup = null;
             }
             if (isAGroup(node) && !selectedGroupsContains(node)) {
               selectedGroups.push(node);
-              refreshCanvasImages();
             }
+            refreshCanvasImages();
           }
         });
 
         cy.on('unselect', 'node', data.eUnselect = function(evt) {
           if (options().appearOnGroupSelect) {
             let node = this;
-            // clearDraws();
             removeGroupFromSelectedGroups(node);
             refreshCanvasImages();
           }
@@ -376,13 +367,12 @@ module.exports = function (params, cy, api) {
                   });
                 else
                   api.expand(node, opts);
-              if (options().appearOnGroupSelect) {
-                refreshCanvasImages();
+
+              // don't draw the cue if the group is expandable, as mouse won't be inside it
+              if (hoveredGroup && !selectedGroupsContains(hoveredGroup) && api.isExpandable(node)) {
+                hoveredGroup = null;
               }
-              // needed if we expand a group but we are still hovering over it to draw it's cue
-              if (hoveredGroup && api.isCollapsible(node) && !selectedGroupsContains(hoveredGroup)) {
-                drawExpandCollapseCue(hoveredGroup);
-              }
+              refreshCanvasImages();
             }
           }
         });
