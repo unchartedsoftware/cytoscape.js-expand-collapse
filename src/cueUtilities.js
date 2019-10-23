@@ -91,16 +91,12 @@ module.exports = function (params, cy, api) {
         ctx.clearRect(0, 0, w, h);
       }
 
-      function selectedGroupsContains(group) {
+      function isSelectedGroupsContains(group) {
         return selectedGroups.find(node => node.id() === group.id()) !== undefined;
       }
 
-      function anyNodeHasACue() {
+      function isAnyGroupWithCue() {
         return hoveredGroup || selectedGroups.length > 0;
-      }
-
-      function hoveredGroupExistsAndNotInSelectedGroup() {
-        return hoveredGroup && !selectedGroupsContains(hoveredGroup);
       }
 
       function drawCuesForSelectedGroups() {
@@ -259,7 +255,7 @@ module.exports = function (params, cy, api) {
 
         cy.on('mouseover', 'node', data.eMouseOver = function (e) {
           let node = this;
-          if (isAGroup(node) && !selectedGroupsContains(node)) {
+          if (isAGroup(node) && !isSelectedGroupsContains(node)) {
             hoveredGroup = node;
           } else {
             // needed incase we hover over a regular node inside a group
@@ -301,7 +297,7 @@ module.exports = function (params, cy, api) {
             if (isMouseHoveringOver(node)) {
               hoveredGroup = null;
             }
-            if (isAGroup(node) && !selectedGroupsContains(node)) {
+            if (isAGroup(node) && !isSelectedGroupsContains(node)) {
               selectedGroups.push(node);
             }
             refreshCanvasImages();
@@ -317,7 +313,7 @@ module.exports = function (params, cy, api) {
         });
 
         cy.on('drag', 'node', data.eDrag = function() {
-          if (anyNodeHasACue()) {
+          if (isAnyGroupWithCue()) {
             refreshCanvasImages();
           }
         });
@@ -325,7 +321,7 @@ module.exports = function (params, cy, api) {
         cy.on('tap', 'node', data.eTap = function (event) {
           var node = this;
           var opts = options();
-          let nodeHasCue = selectedGroupsContains(node);
+          let nodeHasCue = isSelectedGroupsContains(node);
           if (hoveredGroup) {
             nodeHasCue = nodeHasCue || hoveredGroup.id() === node.id();
           }
@@ -369,7 +365,7 @@ module.exports = function (params, cy, api) {
                   api.expand(node, opts);
 
               // don't draw the cue if the group is expandable, as mouse won't be inside it
-              if (hoveredGroup && !selectedGroupsContains(hoveredGroup) && api.isExpandable(node)) {
+              if (hoveredGroup && !isSelectedGroupsContains(hoveredGroup) && api.isExpandable(node)) {
                 hoveredGroup = null;
               }
               refreshCanvasImages();
