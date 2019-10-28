@@ -250,6 +250,20 @@
       getScratch(cyOrEle)[name] = val;
     }
 
+    function initCueImage(options) {
+      if (options.expandCueImage) {
+        let expandImg = new Image();
+        expandImg.src = options.expandCueImage;
+        options.expandCueImage = expandImg;
+      }
+
+      if (options.collapseCueImage) {
+        let collapseImg = new Image();
+        collapseImg.src = options.collapseCueImage;
+        options.collapseCueImage = collapseImg;
+      }
+    }
+
     // register the extension cy.expandCollapse()
     cytoscape("core", "expandCollapse", function (opts) {
       var cy = this;
@@ -268,12 +282,15 @@
         expandCollapseCueLineSize: 8, // size of lines used for drawing plus-minus icons
         expandCueImage: undefined, // image of expand icon if undefined draw regular expand cue
         collapseCueImage: undefined, // image of collapse icon if undefined draw regular collapse cue
-        expandCollapseCueSensitivity: 1 // sensitivity of expand-collapse cues
+        expandCollapseCueSensitivity: 1, // sensitivity of expand-collapse cues
+        appearOnGroupSelect: false
       };
 
       // If opts is not 'get' that is it is a real options object then initilize the extension
       if (opts !== 'get') {
         options = extendOptions(options, opts);
+
+        initCueImage(options);
 
         var expandCollapseUtilities = require('./expandCollapseUtilities')(cy);
         var api = createExtensionAPI(cy, expandCollapseUtilities); // creates and returns the API instance for the extension
