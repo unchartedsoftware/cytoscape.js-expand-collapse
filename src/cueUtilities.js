@@ -91,16 +91,12 @@ module.exports = function (params, cy, api) {
         ctx.clearRect(0, 0, w, h);
       }
 
-      function selectedGroupsContains(group) {
+      function isSelectedGroupsContains(group) {
         return selectedGroups.find(node => node.id() === group.id()) !== undefined;
       }
 
-      function anyNodeHasACue() {
+      function isAnyGroupWithCue() {
         return hoveredGroup || selectedGroups.length > 0;
-      }
-
-      function hoveredGroupExistsAndNotInSelectedGroup() {
-        return hoveredGroup && !selectedGroupsContains(hoveredGroup);
       }
 
       function drawCuesForSelectedGroups() {
@@ -111,7 +107,7 @@ module.exports = function (params, cy, api) {
         selectedGroups = selectedGroups.filter(group => group.id() !== node.id());
       }
 
-      function mouseIsHoveringOver(node) {
+      function isMouseHoveringOver(node) {
         return hoveredGroup && hoveredGroup.id() === node.id();
       }
 
@@ -228,7 +224,7 @@ module.exports = function (params, cy, api) {
 
       function refreshCanvasImages() {
         clearDraws();
-        if (hoveredGroup && !selectedGroupsContains(hoveredGroup)){
+        if (hoveredGroup && !isSelectedGroupsContains(hoveredGroup)){
           drawExpandCollapseCue(hoveredGroup);
         }
         if (options().appearOnGroupSelect) {
@@ -256,10 +252,10 @@ module.exports = function (params, cy, api) {
 
         cy.on('mouseout', 'node', data.eMouseOut = function(e) {
           let node = this;
-          if (mouseIsHoveringOver(node)) {
+          if (isMouseHoveringOver(node)) {
             // note: hoveredGroup is not set to null if we go onto whiteboard, probably need to change mouseover and remove 'node'
             // currently is not a problem as leftover hoveredGroup won't be used and will be reset
-            if (!selectedGroupsContains(hoveredGroup)) {
+            if (!isSelectedGroupsContains(hoveredGroup)) {
               hoveredGroup = null;
             }
             refreshCanvasImages();
@@ -273,7 +269,7 @@ module.exports = function (params, cy, api) {
             if ( hoveredGroup && hoveredGroup.id() !== node.id() ) {
               refreshCanvasImages();
             }
-            if (!selectedGroupsContains(node)) {
+            if (!isSelectedGroupsContains(node)) {
               drawExpandCollapseCue(node);
             }
             hoveredGroup = node;
@@ -316,10 +312,10 @@ module.exports = function (params, cy, api) {
               //   }
               // }
 
-              // if (mouseIsHoveringOver(node)) {
+              // if (isMouseHoveringOver(node)) {
               //   hoveredGroup = null;
               // }
-              if (!selectedGroupsContains(node)) {
+              if (!isSelectedGroupsContains(node)) {
                 selectedGroups.push(node);
               }
               refreshCanvasImages();
@@ -342,7 +338,7 @@ module.exports = function (params, cy, api) {
         });
 
         cy.on('drag', 'node', data.eDrag = function() {
-          if (anyNodeHasACue()) {
+          if (isAnyGroupWithCue()) {
             refreshCanvasImages();
           }
         });
@@ -393,7 +389,7 @@ module.exports = function (params, cy, api) {
                 refreshCanvasImages();
               }
               // needed if we expand a group but we are still hovering over it to draw it's cue
-              if (hoveredGroup && api.isCollapsible(node) && !selectedGroupsContains(hoveredGroup)) {
+              if (hoveredGroup && api.isCollapsible(node) && !isSelectedGroupsContains(hoveredGroup)) {
                 drawExpandCollapseCue(hoveredGroup);
               }
             }
