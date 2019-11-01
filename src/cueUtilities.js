@@ -319,15 +319,41 @@ module.exports = function (params, cy, api) {
           }
         });
 
+        function isMouseEvent(e) {
+          return e.type.substring(0, 5) === 'mouse' || e.type === 'click';
+        }
+
+        function getTouchPageCoordinates(e) {
+          if (e.type === 'touchstart') {
+            return { x: event.touches[0].pageX,
+              y: event.touches[0].pageY
+            };
+          }
+          return { x: event.changedTouches[0].pageX,
+            y: event.changedTouches[0].pageY
+          };
+        }
         function clickedOnCueRegion(node, event) {
+          // needed so it matches the range for expandcollapses rendered locations
+          const TOUCH_OFFSET_Y = 43;
           const expandcollapseRenderedStartX = node._private.data.expandcollapseRenderedStartX;
-          const expandcollapseRenderedStartY = node._private.data.expandcollapseRenderedStartY;
+          let expandcollapseRenderedStartY = node._private.data.expandcollapseRenderedStartY;
           const expandcollapseRenderedRectSize = node._private.data.expandcollapseRenderedCueSize;
           const expandcollapseRenderedEndX = expandcollapseRenderedStartX + expandcollapseRenderedRectSize;
           const expandcollapseRenderedEndY = expandcollapseRenderedStartY + expandcollapseRenderedRectSize;
 
-          return event.offsetX >= expandcollapseRenderedStartX && event.offsetX <= expandcollapseRenderedEndX &&
-                  event.offsetY >= expandcollapseRenderedStartY && event.offsetY <= expandcollapseRenderedEndY;
+          let posX;
+          let posY;
+          if (isMouseEvent(event)) {
+            posX = event.offsetX;
+            posY = event.offsetY;
+          } else {
+            const touchPageCoordinates = getTouchPageCoordinates(event);
+            posX = touchPageCoordinates.x;
+            posY = touchPageCoordinates.y - TOUCH_OFFSET_Y;
+          }
+          return posX >= expandcollapseRenderedStartX && posX <= expandcollapseRenderedEndX &&
+                  posY >= expandcollapseRenderedStartY && posY <= expandcollapseRenderedEndY;
         }
 
         function getGroupOfClickedOnCue(event) {
@@ -396,6 +422,8 @@ module.exports = function (params, cy, api) {
         $canvas.addEventListener('mousedown', stopEvent);
         $canvas.addEventListener('mouseup', stopEvent);
         $canvas.addEventListener('click', cueClick);
+        $canvas.addEventListener('touchstart', stopEvent);
+        $canvas.addEventListener('touchend', cueClick);
       }
 
       // write options to data
@@ -431,6 +459,8 @@ module.exports = function (params, cy, api) {
       $canvas.removeEventListener('mousedown', stopEvent);
       $canvas.removeEventListener('mouseup', stopEvent);
       $canvas.removeEventListener('click', cueClick);
+      $canvas.removeEventListener('touchstart', stopEvent);
+      $canvas.removeEventListener('touchend', cueClick);
     },
     rebind: function () {
       var data = getData();
@@ -458,6 +488,8 @@ module.exports = function (params, cy, api) {
       $canvas.addEventListener('mousedown', stopEvent);
       $canvas.addEventListener('mouseup', stopEvent);
       $canvas.addEventListener('click', cueClick);
+      $canvas.addEventListener('touchstart', stopEvent);
+      $canvas.addEventListener('touchend', cueClick);
     }
   };
 
