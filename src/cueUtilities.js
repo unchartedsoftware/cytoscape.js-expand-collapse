@@ -273,11 +273,12 @@ module.exports = function (params, cy, api) {
               drawExpandCollapseCue(node);
             }
             hoveredGroup = node;
-          } else {
-            // needed incase we hover over a regular node inside a group
-            hoveredGroup = null;
-            refreshCanvasImages();
           }
+          // else {
+          //   // needed incase we hover over a regular node inside a group
+          //   hoveredGroup = null;
+          //   refreshCanvasImages();
+          // }
         });
 
         cy.on('grab', 'node', data.eGrab = function (e) {
@@ -354,8 +355,20 @@ module.exports = function (params, cy, api) {
                   event.offsetY >= expandcollapseRenderedStartY && event.offsetY <= expandcollapseRenderedEndY;
         }
 
+        function getGroupOfClickedOnCue(event) {
+          for (var i = 0; i < selectedGroups.length; i++) {
+            if (clickedOnCueRegion(selectedGroups[i], event)) {
+              return selectedGroups[i];
+            }
+          }
+          return null;
+        }
+
         function cueClick(event) {
           let node = hoveredGroup;
+          if (!node) {
+            node = getGroupOfClickedOnCue(event);
+          }
           let opts = options();
 
           if (node){
@@ -394,6 +407,9 @@ module.exports = function (params, cy, api) {
               }
             }
           }
+          if (event.type === 'select') {
+            event.target.unselect();
+          }
         }
 
         function stopEvent(event) {
@@ -408,6 +424,7 @@ module.exports = function (params, cy, api) {
         $canvas.addEventListener('mouseup', function(event) {
           stopEvent(event);
         });
+        // $canvas.addEventListener('select', cueClick);
         $canvas.addEventListener('click', cueClick);
       }
 
@@ -443,6 +460,7 @@ module.exports = function (params, cy, api) {
       window.removeEventListener('resize', data.eWindowResize);
       $canvas.removeEventListener('mousedown', cueClick);
       $canvas.removeEventListener('mouseup', cueClick);
+      // $canvas.removeEventListener('select', cueClick); 
       $canvas.removeEventListener('click', cueClick);
     },
     rebind: function () {
@@ -470,6 +488,7 @@ module.exports = function (params, cy, api) {
       window.addEventListener('resize', data.eWindowResize);
       $canvas.addEventListener('mousedown', cueClick);
       $canvas.addEventListener('mouseup', cueClick);
+      // $canvas.addEventListener('select', cueClick); 
       $canvas.addEventListener('click', cueClick);
     }
   };
