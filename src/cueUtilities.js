@@ -266,19 +266,14 @@ module.exports = function (params, cy, api) {
           let node = this;
           if (isAGroup(node)) {
             // clear draws if any
-            if ( hoveredGroup && hoveredGroup.id() !== node.id() ) {
-              refreshCanvasImages();
-            }
-            if (!isSelectedGroupsContains(node)) {
-              drawExpandCollapseCue(node);
-            }
+            // if ( hoveredGroup && hoveredGroup.id() !== node.id() ) {
+            // }
             hoveredGroup = node;
+            // if (!isSelectedGroupsContains(node)) {
+            //   drawExpandCollapseCue(node);
+            // }
+            refreshCanvasImages();
           }
-          // else {
-          //   // needed incase we hover over a regular node inside a group
-          //   hoveredGroup = null;
-          //   refreshCanvasImages();
-          // }
         });
 
         cy.on('grab', 'node', data.eGrab = function (e) {
@@ -303,19 +298,6 @@ module.exports = function (params, cy, api) {
           if (options().appearOnGroupSelect) {
             let node = this;
             if (isAGroup(node)) {
-              // if (!selectedGroupsContainsGroup(node)) {
-              //   if (hoveredGroup) {
-              //     selectedGroups.push(hoveredGroup);
-              //   }
-              //   else {
-              //     drawExpandCollapseCue(node);
-              //     selectedGroups.push(node);
-              //   }
-              // }
-
-              // if (isMouseHoveringOver(node)) {
-              //   hoveredGroup = null;
-              // }
               if (!isSelectedGroupsContains(node)) {
                 selectedGroups.push(node);
               }
@@ -327,7 +309,6 @@ module.exports = function (params, cy, api) {
         cy.on('unselect', 'node', data.eUnselect = function(evt) {
           if (options().appearOnGroupSelect) {
             let node = this;
-            // clearDraws();
 
             if (hoveredGroup && !hoveringOverDifferentGroup(node)) {
               hoveredGroup = null;
@@ -396,35 +377,32 @@ module.exports = function (params, cy, api) {
                 else
                   api.expand(node, opts);
               if (options().appearOnGroupSelect) {
+                // mouse won't be in collapsed group, so shouldn't show cue
                 if (hoveredGroup && api.isExpandable(node)) {
                   hoveredGroup = null;
                 }
                 refreshCanvasImages();
               }
-              // needed if we expand a group but we are still hovering over it to draw it's cue
-              if (hoveredGroup && api.isCollapsible(node) && !isSelectedGroupsContains(hoveredGroup)) {
-                drawExpandCollapseCue(hoveredGroup);
-              }
             }
-          }
-          if (event.type === 'select') {
-            event.target.unselect();
           }
         }
 
+        function isClickOnAnyCueRegion(node, event) {
+          return (node && clickedOnCueRegion(node, event)) || getGroupOfClickedOnCue(event);
+        }
         function stopEvent(event) {
           let node = hoveredGroup;
-          if (node && clickedOnCueRegion(node, event)){
+          if (isClickOnAnyCueRegion(node, event)){
             event.stopPropagation();
           }
         }
+
         $canvas.addEventListener('mousedown', function(event) {
           stopEvent(event);
         });
         $canvas.addEventListener('mouseup', function(event) {
           stopEvent(event);
         });
-        // $canvas.addEventListener('select', cueClick);
         $canvas.addEventListener('click', cueClick);
       }
 
@@ -460,7 +438,6 @@ module.exports = function (params, cy, api) {
       window.removeEventListener('resize', data.eWindowResize);
       $canvas.removeEventListener('mousedown', cueClick);
       $canvas.removeEventListener('mouseup', cueClick);
-      // $canvas.removeEventListener('select', cueClick); 
       $canvas.removeEventListener('click', cueClick);
     },
     rebind: function () {
@@ -488,7 +465,6 @@ module.exports = function (params, cy, api) {
       window.addEventListener('resize', data.eWindowResize);
       $canvas.addEventListener('mousedown', cueClick);
       $canvas.addEventListener('mouseup', cueClick);
-      // $canvas.addEventListener('select', cueClick); 
       $canvas.addEventListener('click', cueClick);
     }
   };
