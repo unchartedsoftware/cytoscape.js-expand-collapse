@@ -381,12 +381,12 @@ module.exports = function (params, cy, api) {
           }
         }
 
-        function isClickOnAnyCueRegion(node, event) {
-          return (node && clickedOnCueRegion(node, event)) || getGroupOfClickedOnCue(event);
+        function isClickOnAnyCueRegion(event) {
+          return (hoveredGroup && clickedOnCueRegion(hoveredGroup, event)) || getGroupOfClickedOnCue(event);
         }
+
         function stopEvent(event) {
-          let node = hoveredGroup;
-          if (isClickOnAnyCueRegion(node, event)){
+          if (isClickOnAnyCueRegion(event)){
             event.stopPropagation();
           }
         }
