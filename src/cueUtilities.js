@@ -265,13 +265,7 @@ module.exports = function (params, cy, api) {
         cy.on('mouseover', 'node', data.eMouseOver = function (e) {
           let node = this;
           if (isAGroup(node)) {
-            // clear draws if any
-            // if ( hoveredGroup && hoveredGroup.id() !== node.id() ) {
-            // }
             hoveredGroup = node;
-            // if (!isSelectedGroupsContains(node)) {
-            //   drawExpandCollapseCue(node);
-            // }
             refreshCanvasImages();
           }
         });
