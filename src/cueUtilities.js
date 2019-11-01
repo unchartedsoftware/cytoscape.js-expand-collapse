@@ -333,6 +333,7 @@ module.exports = function (params, cy, api) {
             y: event.changedTouches[0].pageY
           };
         }
+
         function clickedOnCueRegion(node, event) {
           // needed so it matches the range for expandcollapses rendered locations
           const TOUCH_OFFSET_Y = 43;
