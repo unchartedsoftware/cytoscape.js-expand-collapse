@@ -341,48 +341,50 @@ module.exports = function (params, cy, api) {
 
         function cueClick(event) {
           let node = hoveredGroup;
-          if (!node) {
+          if (!node && selectedGroups.length > 0) {
             node = getGroupOfClickedOnCue(event);
+          }
+          // no cue exists
+          if (!node) {
+            return;
           }
           let opts = options();
 
-          if (node){
-            if (clickedOnCueRegion(node, event)) {
-              event.stopPropagation();
-              if(opts.undoable && !ur)
-                ur = cy.undoRedo({
-                  defaultActions: false
+          if (clickedOnCueRegion(node, event)) {
+            event.stopPropagation();
+            if(opts.undoable && !ur)
+              ur = cy.undoRedo({
+                defaultActions: false
+              });
+            if(api.isCollapsible(node))
+              if (opts.undoable){
+                ur.do("collapse", {
+                  nodes: node,
+                  options: opts
                 });
-              if(api.isCollapsible(node))
-                if (opts.undoable){
-                  ur.do("collapse", {
-                    nodes: node,
-                    options: opts
-                  });
-                }
-                else
-                  api.collapse(node, opts);
-              else if(api.isExpandable(node))
-                if (opts.undoable)
-                  ur.do("expand", {
-                    nodes: node,
-                    options: opts
-                  });
-                else
-                  api.expand(node, opts);
-              if (options().appearOnGroupSelect) {
-                // mouse won't be in collapsed group, so shouldn't show cue
-                if (hoveredGroup && api.isExpandable(node)) {
-                  hoveredGroup = null;
-                }
-                refreshCanvasImages();
               }
+              else
+                api.collapse(node, opts);
+            else if(api.isExpandable(node))
+              if (opts.undoable)
+                ur.do("expand", {
+                  nodes: node,
+                  options: opts
+                });
+              else
+                api.expand(node, opts);
+            if (options().appearOnGroupSelect) {
+              // mouse won't be in collapsed group, so shouldn't show cue
+              if (hoveredGroup && api.isExpandable(node)) {
+                hoveredGroup = null;
+              }
+              refreshCanvasImages();
             }
           }
         }
 
         function isClickOnAnyCueRegion(event) {
-          return (hoveredGroup && clickedOnCueRegion(hoveredGroup, event)) || getGroupOfClickedOnCue(event);
+          return (hoveredGroup && clickedOnCueRegion(hoveredGroup, event)) || (selectedGroups.length > 0 && getGroupOfClickedOnCue(event));
         }
 
         function stopEvent(event) {
@@ -391,12 +393,8 @@ module.exports = function (params, cy, api) {
           }
         }
 
-        $canvas.addEventListener('mousedown', function(event) {
-          stopEvent(event);
-        });
-        $canvas.addEventListener('mouseup', function(event) {
-          stopEvent(event);
-        });
+        $canvas.addEventListener('mousedown', stopEvent);
+        $canvas.addEventListener('mouseup', stopEvent);
         $canvas.addEventListener('click', cueClick);
       }
 
@@ -430,8 +428,8 @@ module.exports = function (params, cy, api) {
           .off('drag', 'node', data.eDrag);
 
       window.removeEventListener('resize', data.eWindowResize);
-      $canvas.removeEventListener('mousedown', cueClick);
-      $canvas.removeEventListener('mouseup', cueClick);
+      $canvas.removeEventListener('mousedown', stopEvent);
+      $canvas.removeEventListener('mouseup', stopEvent);
       $canvas.removeEventListener('click', cueClick);
     },
     rebind: function () {
@@ -457,8 +455,8 @@ module.exports = function (params, cy, api) {
         .on('drag', 'node', data.eDrag);
 
       window.addEventListener('resize', data.eWindowResize);
-      $canvas.addEventListener('mousedown', cueClick);
-      $canvas.addEventListener('mouseup', cueClick);
+      $canvas.addEventListener('mousedown', stopEvent);
+      $canvas.addEventListener('mouseup', stopEvent);
       $canvas.addEventListener('click', cueClick);
     }
   };
