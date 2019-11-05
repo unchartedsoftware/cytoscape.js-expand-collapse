@@ -8,7 +8,7 @@ module.exports = function (params, cy, api) {
   let selectedGroups = [];
 
   const getData = function(){
-    let scratch = cy.scratch('_cyExpandCollapse');
+    var scratch = cy.scratch('_cyExpandCollapse');
     return scratch && scratch.cueUtilities;
   };
 
@@ -26,6 +26,7 @@ module.exports = function (params, cy, api) {
     init: function () {
       var self = this;
       var $canvas = document.createElement('canvas');
+      $canvas.classList.add("expand-collapse-canvas");
       var $container = cy.container();
       var ctx = $canvas.getContext( '2d' );
       $container.append($canvas);
@@ -42,12 +43,12 @@ module.exports = function (params, cy, api) {
       }
 
       var _sizeCanvas = debounce(function () {
-        $canvas.height = cy.height();
-        $canvas.width = cy.width();
+        $canvas.height = cy.container().offsetHeight;
+        $canvas.width = cy.container().offsetWidth;
         $canvas.style.position = 'absolute';
         $canvas.style.top = 0;
         $canvas.style.left = 0;
-        $canvas.style.zIndex = 999;
+        $canvas.style.zIndex = options().zIndex;
 
         setTimeout(function () {
           var canvasBb = offset($canvas);
@@ -69,7 +70,7 @@ module.exports = function (params, cy, api) {
 
       sizeCanvas();
 
-      let data = {};
+      var data = {};
 
       // if there are events field in data unbind them here
       // to prevent binding the same event multiple times
