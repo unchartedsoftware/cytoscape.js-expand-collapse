@@ -8,7 +8,7 @@ module.exports = function (params, cy, api) {
   let selectedGroups = [];
 
   const getData = function(){
-    let scratch = cy.scratch('_cyExpandCollapse');
+    var scratch = cy.scratch('_cyExpandCollapse');
     return scratch && scratch.cueUtilities;
   };
 
@@ -47,7 +47,7 @@ module.exports = function (params, cy, api) {
         $canvas.style.position = 'absolute';
         $canvas.style.top = 0;
         $canvas.style.left = 0;
-        $canvas.style.zIndex = 999;
+        $canvas.style.zIndex = options().zIndex;
 
         setTimeout(function () {
           var canvasBb = offset($canvas);
@@ -69,7 +69,7 @@ module.exports = function (params, cy, api) {
 
       sizeCanvas();
 
-      let data = {};
+      var data = {};
 
       // if there are events field in data unbind them here
       // to prevent binding the same event multiple times
