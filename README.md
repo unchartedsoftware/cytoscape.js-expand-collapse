@@ -1,7 +1,6 @@
 cytoscape-expand-collapse
 ================================================================================
 
-
 ## Description
 
 This extension provides an interface to expand/collapse nodes for better management of complexity of Cytoscape.js compound graphs, distributed under [The MIT License](https://opensource.org/licenses/MIT).
@@ -14,7 +13,7 @@ U. Dogrusoz , A. Karacelik, I. Safarli, H. Balci, L. Dervishi, and M.C. Siper, "
 
 ## Demo
 
-Click [here](http://ivis-at-bilkent.github.io/cytoscape.js-expand-collapse/demo.html) (no undo) or [here](http://ivis-at-bilkent.github.io/cytoscape.js-expand-collapse/demo-undoable.html) (undoable) or [here](http://ivis-at-bilkent.github.io/cytoscape.js-expand-collapse/demo-compounds-collapsed.html) (compounds initially collapsed) for a demo.
+Click [here](http://ivis-at-bilkent.github.io/cytoscape.js-expand-collapse/demo.html) (no undo and with custom cue image) or [here](http://ivis-at-bilkent.github.io/cytoscape.js-expand-collapse/demo-undoable.html) (undoable) or [here](http://ivis-at-bilkent.github.io/cytoscape.js-expand-collapse/demo-compounds-collapsed.html) (compounds initially collapsed) for a demo.
 
 ## API
 
@@ -117,10 +116,10 @@ Notice that following events are performed for *each* node that is collapsed/exp
       expandCollapseCueLineSize: 8, // size of lines used for drawing plus-minus icons
       expandCueImage: undefined, // image of expand icon if undefined draw regular expand cue
       collapseCueImage: undefined, // image of collapse icon if undefined draw regular collapse cue
-      expandCollapseCueSensitivity: 1 // sensitivity of expand-collapse cues
+      expandCollapseCueSensitivity: 1, // sensitivity of expand-collapse cues
+      zIndex: 999 // z-index value of the canvas in which cue ımages are drawn
     };
 ```
-*Note that this extension creates a new canvas on the viewport with z-index value '999' to render the visual cue. If your application uses any other canvas, please arrange its z-index value accordingly.*
 
 ## Default Undo/Redo Actions
 `ur.do("collapse", { nodes: eles, options: opts)` Equivalent of eles.collapse(opts)
@@ -142,9 +141,9 @@ Notice that following events are performed for *each* node that is collapsed/exp
 
 ## Dependencies
 
- * Cytoscape.js ^1.7.0
+ * Cytoscape.js ^3.3.0
  * cytoscape-undo-redo.js(optional) ^1.0.1
- * cytoscape-cose-bilkent.js(optional/suggested for layout after expand/collapse) ^1.3.6
+ * cytoscape-cose-bilkent.js(optional/suggested for layout after expand/collapse) ^4.0.0
 
 
 ## Usage instructions
@@ -185,8 +184,8 @@ This project is set up to automatically be published to npm and bower.  To publi
 
 ## Team
 
-  * [Metin Can Siper](https://github.com/metincansiper), [Alper Karacelik](https://github.com/alperkaracelik), [Ugur Dogrusoz](https://github.com/ugurdogrusoz) of [i-Vis at Bilkent University](http://www.cs.bilkent.edu.tr/~ivis)
+  * [Hasan Balci](https://github.com/hasanbalci), [Ugur Dogrusoz](https://github.com/ugurdogrusoz) of [i-Vis at Bilkent University](http://www.cs.bilkent.edu.tr/~ivis) and [Metin Can Siper](https://github.com/metincansiper) of the Demir Lab at [OHSU](http://www.ohsu.edu/)
 
 ## Alumni
 
-  * [Ilkin Safarli](https://github.com/kinimesi), [Selim Firat Yilmaz](https://github.com/mrsfy)
+  * [Ilkin Safarli](https://github.com/kinimesi), [Alper Karacelik](https://github.com/alperkaracelik), [Selim Firat Yilmaz](https://github.com/mrsfy)

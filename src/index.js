@@ -55,7 +55,7 @@
 
       api.extendOptions = function(opts) {
         var options = getScratch(cy, 'options');
-        let newOptions = extendOptions( options, opts );
+        var newOptions = extendOptions( options, opts );
         handleNewOptions(newOptions);
         setScratch(cy, 'options', newOptions);
       }
@@ -66,7 +66,7 @@
         opts[ name ] = value;
 
         var options = getScratch(cy, 'options');
-        let newOptions = extendOptions( options, opts );
+        var newOptions = extendOptions( options, opts );
 
         handleNewOptions(newOptions);
         setScratch(cy, 'options', newOptions);
@@ -283,7 +283,8 @@
         expandCueImage: undefined, // image of expand icon if undefined draw regular expand cue
         collapseCueImage: undefined, // image of collapse icon if undefined draw regular collapse cue
         expandCollapseCueSensitivity: 1, // sensitivity of expand-collapse cues
-        appearOnGroupSelect: false
+        appearOnGroupSelect: false, // sets whether you want cue appearing on selection of a group
+        zIndex: 999 // z-index value of the canvas in which cue ımages are drawn
       };
 
       // If opts is not 'get' that is it is a real options object then initilize the extension
