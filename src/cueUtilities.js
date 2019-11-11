@@ -320,7 +320,7 @@ module.exports = function (params, cy, api) {
           }
         });
 
-        function eventOnCueRegion(node, event) {
+        function isEventOnCueRegion(node, event) {
           const expandcollapseRenderedStartX = node._private.data.expandcollapseRenderedStartX;
           const expandcollapseRenderedStartY = node._private.data.expandcollapseRenderedStartY;
           const expandcollapseRenderedRectSize = node._private.data.expandcollapseRenderedCueSize;
@@ -332,16 +332,13 @@ module.exports = function (params, cy, api) {
         }
 
         function getGroupOfClickedOnCue(event) {
-          const clickedGroup = selectedGroups.find(group => eventOnCueRegion(group, event));
-          if (clickedGroup) {
-            return clickedGroup;
-          }
-          return null;
+          const clickedGroup = selectedGroups.find(group => isEventOnCueRegion(group, event));
+          return clickedGroup ? clickedGroup : null;
         }
 
         function cueClick(event) {
           let node;
-          if (hoveredGroup && eventOnCueRegion(hoveredGroup, event)) {
+          if (hoveredGroup && isEventOnCueRegion(hoveredGroup, event)) {
             node = hoveredGroup;
           }
           else if (selectedGroups.length > 0) {
@@ -385,17 +382,17 @@ module.exports = function (params, cy, api) {
         }
 
         function isClickOnAnyCueRegion(event) {
-          return (hoveredGroup && eventOnCueRegion(hoveredGroup, event)) || (selectedGroups.length > 0 && getGroupOfClickedOnCue(event));
+          return (hoveredGroup && isEventOnCueRegion(hoveredGroup, event)) || (selectedGroups.length > 0 && getGroupOfClickedOnCue(event));
         }
 
-        function interceptCytoscapeEventsWithinCue(event) {
+        function interceptEventWithinCue(event) {
           if (isClickOnAnyCueRegion(event)){
             event.stopPropagation();
           }
         }
 
-        $canvas.addEventListener('mousedown', interceptCytoscapeEventsWithinCue);
-        $canvas.addEventListener('mouseup', interceptCytoscapeEventsWithinCue);
+        $canvas.addEventListener('mousedown', interceptEventWithinCue);
+        $canvas.addEventListener('mouseup', interceptEventWithinCue);
         $canvas.addEventListener('click', cueClick);
       }
 
