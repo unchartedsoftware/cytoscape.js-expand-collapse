@@ -254,8 +254,8 @@ module.exports = function (params, cy, api) {
         cy.on('mouseout', 'node', data.eMouseOut = function(e) {
           let node = this;
           if (isMouseHoveringOver(node)) {
-            // note: hoveredGroup is not set to null if we go onto whiteboard, probably need to change mouseover and remove 'node'
-            // currently is not a problem as leftover hoveredGroup won't be used and will be reset
+            // note: hoveredGroup is not set to null if we mouseout from a selected group
+            // currently is not a problem as leftover hoveredGroup won't be used and will be reset on mouseover
             if (!isSelectedGroupsContains(hoveredGroup)) {
               hoveredGroup = null;
             }
@@ -335,7 +335,7 @@ module.exports = function (params, cy, api) {
           };
         }
 
-        function clickedOnCueRegion(node, event) {
+        function isEventOnCueRegion(node, event) {
           // needed so it matches the range for expandcollapses rendered locations
           const TOUCH_OFFSET_Y = 43;
           const expandcollapseRenderedStartX = node._private.data.expandcollapseRenderedStartX;
@@ -359,17 +359,16 @@ module.exports = function (params, cy, api) {
         }
 
         function getGroupOfClickedOnCue(event) {
-          for (var i = 0; i < selectedGroups.length; i++) {
-            if (clickedOnCueRegion(selectedGroups[i], event)) {
-              return selectedGroups[i];
-            }
-          }
-          return null;
+          const clickedGroup = selectedGroups.find(group => isEventOnCueRegion(group, event));
+          return clickedGroup ? clickedGroup : null;
         }
 
         function cueClick(event) {
-          let node = hoveredGroup;
-          if (!node && selectedGroups.length > 0) {
+          let node;
+          if (hoveredGroup && isEventOnCueRegion(hoveredGroup, event)) {
+            node = hoveredGroup;
+          }
+          else if (selectedGroups.length > 0) {
             node = getGroupOfClickedOnCue(event);
           }
           // no cue exists
@@ -378,53 +377,51 @@ module.exports = function (params, cy, api) {
           }
           let opts = options();
 
-          if (clickedOnCueRegion(node, event)) {
-            event.stopPropagation();
-            if(opts.undoable && !ur)
-              ur = cy.undoRedo({
-                defaultActions: false
+          event.stopPropagation();
+          if(opts.undoable && !ur)
+            ur = cy.undoRedo({
+              defaultActions: false
+            });
+          if(api.isCollapsible(node))
+            if (opts.undoable){
+              ur.do("collapse", {
+                nodes: node,
+                options: opts
               });
-            if(api.isCollapsible(node))
-              if (opts.undoable){
-                ur.do("collapse", {
-                  nodes: node,
-                  options: opts
-                });
-              }
-              else
-                api.collapse(node, opts);
-            else if(api.isExpandable(node))
-              if (opts.undoable)
-                ur.do("expand", {
-                  nodes: node,
-                  options: opts
-                });
-              else
-                api.expand(node, opts);
-            if (options().appearOnGroupSelect) {
-              // mouse won't be in collapsed group, so shouldn't show cue
-              if (hoveredGroup && api.isExpandable(node)) {
-                hoveredGroup = null;
-              }
-              refreshCanvasImages();
             }
+            else
+              api.collapse(node, opts);
+          else if(api.isExpandable(node))
+            if (opts.undoable)
+              ur.do("expand", {
+                nodes: node,
+                options: opts
+              });
+            else
+              api.expand(node, opts);
+          if (options().appearOnGroupSelect) {
+            // mouse won't be in collapsed group, so shouldn't show cue
+            if (hoveredGroup && api.isExpandable(node)) {
+              hoveredGroup = null;
+            }
+            refreshCanvasImages();
           }
         }
 
         function isClickOnAnyCueRegion(event) {
-          return (hoveredGroup && clickedOnCueRegion(hoveredGroup, event)) || (selectedGroups.length > 0 && getGroupOfClickedOnCue(event));
+          return (hoveredGroup && isEventOnCueRegion(hoveredGroup, event)) || (selectedGroups.length > 0 && getGroupOfClickedOnCue(event));
         }
 
-        function stopEvent(event) {
+        function interceptEventWithinCue(event) {
           if (isClickOnAnyCueRegion(event)){
             event.stopPropagation();
           }
         }
 
-        $canvas.addEventListener('mousedown', stopEvent);
-        $canvas.addEventListener('mouseup', stopEvent);
+        $canvas.addEventListener('mousedown', interceptEventWithinCue);
+        $canvas.addEventListener('mouseup', interceptEventWithinCue);
         $canvas.addEventListener('click', cueClick);
-        $canvas.addEventListener('touchstart', stopEvent);
+        $canvas.addEventListener('touchstart', interceptEventWithinCue);
         $canvas.addEventListener('touchend', cueClick);
       }
 
@@ -458,10 +455,10 @@ module.exports = function (params, cy, api) {
           .off('drag', 'node', data.eDrag);
 
       window.removeEventListener('resize', data.eWindowResize);
-      $canvas.removeEventListener('mousedown', stopEvent);
-      $canvas.removeEventListener('mouseup', stopEvent);
+      $canvas.removeEventListener('mousedown', interceptEventWithinCue);
+      $canvas.removeEventListener('mouseup', interceptEventWithinCue);
       $canvas.removeEventListener('click', cueClick);
-      $canvas.removeEventListener('touchstart', stopEvent);
+      $canvas.removeEventListener('touchstart', interceptEventWithinCue);
       $canvas.removeEventListener('touchend', cueClick);
     },
     rebind: function () {
