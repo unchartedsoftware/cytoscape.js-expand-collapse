@@ -371,7 +371,7 @@ module.exports = function (params, cy, api) {
           else if (selectedGroups.length > 0) {
             node = getGroupOfClickedOnCue(event);
           }
-          // no cue exists
+
           if (!node) {
             return;
           }
@@ -484,8 +484,8 @@ module.exports = function (params, cy, api) {
         .on('drag', 'node', data.eDrag);
 
       window.addEventListener('resize', data.eWindowResize);
-      $canvas.addEventListener('mousedown', stopEvent);
-      $canvas.addEventListener('mouseup', stopEvent);
+      $canvas.addEventListener('mousedown', interceptCytoscapeEventsWithinCue);
+      $canvas.addEventListener('mouseup', interceptCytoscapeEventsWithinCue);
       $canvas.addEventListener('click', cueClick);
       $canvas.addEventListener('touchstart', stopEvent);
       $canvas.addEventListener('touchend', cueClick);
