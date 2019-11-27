@@ -478,7 +478,7 @@ module.exports = function (params, cy, api) {
         .on('position', 'node', data.ePosition)
         .on('add', 'node', data.eAdd)
         .on('select', 'node', data.eSelect)
-        .on('unselect', 'ndoe', data.eUnselect)
+        .on('unselect', 'node', data.eUnselect)
         .on('free', 'node', data.eFree)
         .on('zoom pan', data.eZoom)
         .on('drag', 'node', data.eDrag);
