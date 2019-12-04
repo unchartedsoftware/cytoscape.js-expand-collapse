@@ -366,7 +366,7 @@ module.exports = function (params, cy, api) {
           return clickedGroup ? clickedGroup : null;
         }
 
-        function cueClick(event) {
+        function cueTap(event) {
           let node;
           if (hoveredGroup && isEventOnCueRegion(hoveredGroup, event)) {
             node = hoveredGroup;
@@ -424,9 +424,9 @@ module.exports = function (params, cy, api) {
 
         $canvas.addEventListener('mousedown', interceptEventWithinCue);
         $canvas.addEventListener('mouseup', interceptEventWithinCue);
-        $canvas.addEventListener('click', cueClick);
+        $canvas.addEventListener('click', cueTap);
         $canvas.addEventListener('touchstart', interceptEventWithinCue);
-        $canvas.addEventListener('touchend', cueClick);
+        $canvas.addEventListener('touchend', cueTap);
       }
 
       // write options to data
@@ -461,9 +461,9 @@ module.exports = function (params, cy, api) {
       window.removeEventListener('resize', data.eWindowResize);
       $canvas.removeEventListener('mousedown', interceptEventWithinCue);
       $canvas.removeEventListener('mouseup', interceptEventWithinCue);
-      $canvas.removeEventListener('click', cueClick);
+      $canvas.removeEventListener('click', cueTap);
       $canvas.removeEventListener('touchstart', interceptEventWithinCue);
-      $canvas.removeEventListener('touchend', cueClick);
+      $canvas.removeEventListener('touchend', cueTap);
     },
     rebind: function () {
       var data = getData();
@@ -490,9 +490,9 @@ module.exports = function (params, cy, api) {
       window.addEventListener('resize', data.eWindowResize);
       $canvas.addEventListener('mousedown', interceptCytoscapeEventsWithinCue);
       $canvas.addEventListener('mouseup', interceptCytoscapeEventsWithinCue);
-      $canvas.addEventListener('click', cueClick);
+      $canvas.addEventListener('click', cueTap);
       $canvas.addEventListener('touchstart', stopEvent);
-      $canvas.addEventListener('touchend', cueClick);
+      $canvas.addEventListener('touchend', cueTap);
     }
   };
 
