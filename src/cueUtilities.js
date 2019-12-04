@@ -361,7 +361,7 @@ module.exports = function (params, cy, api) {
                   posY >= expandcollapseRenderedStartY && posY <= expandcollapseRenderedEndY;
         }
 
-        function getGroupOfClickedOnCue(event) {
+        function getGroupOfTappedOnCue(event) {
           const clickedGroup = selectedGroups.find(group => isEventOnCueRegion(group, event));
           return clickedGroup ? clickedGroup : null;
         }
@@ -372,7 +372,7 @@ module.exports = function (params, cy, api) {
             node = hoveredGroup;
           }
           else if (selectedGroups.length > 0) {
-            node = getGroupOfClickedOnCue(event);
+            node = getGroupOfTappedOnCue(event);
           }
 
           if (!node) {
@@ -413,7 +413,7 @@ module.exports = function (params, cy, api) {
         }
 
         function isClickOnAnyCueRegion(event) {
-          return (hoveredGroup && isEventOnCueRegion(hoveredGroup, event)) || (selectedGroups.length > 0 && getGroupOfClickedOnCue(event));
+          return (hoveredGroup && isEventOnCueRegion(hoveredGroup, event)) || (selectedGroups.length > 0 && getGroupOfTappedOnCue(event));
         }
 
         function interceptEventWithinCue(event) {
