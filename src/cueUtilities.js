@@ -346,14 +346,17 @@ module.exports = function (params, cy, api) {
 
           let posX;
           let posY;
-          if (isMouseEvent(event)) {
+          if (event instanceof MouseEvent) {
             posX = event.offsetX;
             posY = event.offsetY;
-          } else {
+          } else if (event instanceof TouchEvent) {
             const touchPageCoordinates = getTouchPageCoordinates(event);
             posX = touchPageCoordinates.x;
             posY = touchPageCoordinates.y - TOUCH_OFFSET_Y;
+          } else {
+            return false;
           }
+
           return posX >= expandcollapseRenderedStartX && posX <= expandcollapseRenderedEndX &&
                   posY >= expandcollapseRenderedStartY && posY <= expandcollapseRenderedEndY;
         }
@@ -377,6 +380,7 @@ module.exports = function (params, cy, api) {
           }
           let opts = options();
 
+          event.preventDefault();
           event.stopPropagation();
           if(opts.undoable && !ur)
             ur = cy.undoRedo({
