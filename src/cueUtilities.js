@@ -336,8 +336,6 @@ module.exports = function (params, cy, api) {
         }
 
         function isEventOnCueRegion(node, event) {
-          // needed so it matches the range for expandcollapses rendered locations
-          const TOUCH_OFFSET_Y = 43;
           const expandcollapseRenderedStartX = node._private.data.expandcollapseRenderedStartX;
           let expandcollapseRenderedStartY = node._private.data.expandcollapseRenderedStartY;
           const expandcollapseRenderedRectSize = node._private.data.expandcollapseRenderedCueSize;
@@ -350,9 +348,11 @@ module.exports = function (params, cy, api) {
             posX = event.offsetX;
             posY = event.offsetY;
           } else if (event instanceof TouchEvent) {
+            // needed so it matches the range for expandcollapses rendered locations
+            const canvasRect = event.target.getBoundingClientRect();
             const touchPageCoordinates = getTouchPageCoordinates(event);
-            posX = touchPageCoordinates.x;
-            posY = touchPageCoordinates.y - TOUCH_OFFSET_Y;
+            posX = touchPageCoordinates.x - canvasRect.x;
+            posY = touchPageCoordinates.y - canvasRect.y;
           } else {
             return false;
           }
