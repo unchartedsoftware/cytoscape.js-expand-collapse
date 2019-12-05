@@ -491,7 +491,7 @@ module.exports = function (params, cy, api) {
       $canvas.addEventListener('mousedown', interceptCytoscapeEventsWithinCue);
       $canvas.addEventListener('mouseup', interceptCytoscapeEventsWithinCue);
       $canvas.addEventListener('click', cueTap);
-      $canvas.addEventListener('touchstart', stopEvent);
+      $canvas.addEventListener('touchstart', interceptCytoscapeEventsWithinCue);
       $canvas.addEventListener('touchend', cueTap);
     }
   };
