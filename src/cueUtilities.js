@@ -320,10 +320,6 @@ module.exports = function (params, cy, api) {
           }
         });
 
-        function isMouseEvent(e) {
-          return e.type.substring(0, 5) === 'mouse' || e.type === 'click';
-        }
-
         function getTouchPageCoordinates(e) {
           if (e.type === 'touchstart') {
             return { x: event.touches[0].pageX,
