@@ -300,9 +300,13 @@ module.exports = function (params, cy, api) {
           return false;
         }
 
+        function getAllGroups(cy) {
+          return cy.$('.cy-expand-collapse-collapsed-node').union(':parent');
+        }
+
         function getAllGroupsUnderEvent(cy, e) {
           const groupsUnderEvent = [];
-          const groups = cy.$('.cy-expand-collapse-collapsed-node').union(cy.$(':parent'));
+          const groups = getAllGroups(cy);
           for (let i = 0; i < groups.length; i++) {
             if (isInsideCompound(groups[i], e)) {
               groupsUnderEvent.push(groups[i]);
@@ -314,15 +318,16 @@ module.exports = function (params, cy, api) {
         function getAllGroupsWithHighestZDepth(groups) {
           let highestZDepthGroups = [];
           let highestZDepth = 0;
-          for (let i = 0; i < groups.length; i++) {
-            let currentZDepth = groups[i].zDepth();
+          groups.forEach((group) => {
+            let currentZDepth = group.zDepth();
+            // if we find groups with a higher zDepth, keep track of those
             if (currentZDepth > highestZDepth) {
               highestZDepth = currentZDepth;
-              highestZDepthGroups = [groups[i]];
+              highestZDepthGroups = [group];
             } else if (currentZDepth === highestZDepth) {
-              highestZDepthGroups.push(groups[i]);
+              highestZDepthGroups.push(group);
             }
-          }
+          });
           return highestZDepthGroups;
         }
 
@@ -342,6 +347,7 @@ module.exports = function (params, cy, api) {
             refreshCanvasImages();
           }
         }
+
         cy.on('mousemove', 'edge', data.eMouseMove = function(e) {
           drawCueOnHighestZDepthGroup(e);
         });
@@ -531,6 +537,7 @@ module.exports = function (params, cy, api) {
         cy.off('mouseover', 'node', data.eMouseOver)
           .off('mouseout', 'node', data.eMouseOut)
           .off('mousedown', 'node', data.eMouseDown)
+          .off('mousemove', 'node', data.eMouseMoveNode)
           .off('mouseup', 'node', data.eMouseUp)
           .off('free', 'node', data.eFree)
           .off('grab', 'node', data.eGrab)
@@ -563,6 +570,7 @@ module.exports = function (params, cy, api) {
         .on('mouseout', 'node', data.eMouseOut)
         .on('mousedown', 'node', data.eMouseDown)
         .on('mouseup', 'node', data.eMouseUp)
+        .on('mousemove', 'node', data.eMouseMoveNode)
         .on('free', 'node', data.eFree)
         .on('grab', 'node', data.eGrab)
         .on('position', 'node', data.ePosition)
