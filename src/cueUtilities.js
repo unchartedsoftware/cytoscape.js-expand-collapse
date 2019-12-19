@@ -112,6 +112,10 @@ module.exports = function (params, cy, api) {
         return hoveredGroup && hoveredGroup.id() === node.id();
       }
 
+      function isMouseHoveringOverGroupChild(node) {
+        return hoveredGroup && node.parent().id() === hoveredGroup.id();
+      }
+
       function isAGroup(node) {
         return api.isCollapsible(node) || api.isExpandable(node);
       }
@@ -253,7 +257,7 @@ module.exports = function (params, cy, api) {
 
         cy.on('mouseout', 'node', data.eMouseOut = function(e) {
           let node = this;
-          if (isMouseHoveringOver(node)) {
+          if (isMouseHoveringOver(node) || isMouseHoveringOverGroupChild(node)) {
             // note: hoveredGroup is not set to null if we mouseout from a selected group
             // currently is not a problem as leftover hoveredGroup won't be used and will be reset on mouseover
             if (!isSelectedGroupsContains(hoveredGroup)) {
@@ -268,6 +272,13 @@ module.exports = function (params, cy, api) {
           if (isAGroup(node)) {
             hoveredGroup = node;
             refreshCanvasImages();
+          } else if (!node.isParent()) {
+            // if we are in a groups child
+            const parent = node.parent();
+            if (parent.length > 0) {
+              hoveredGroup = node.parent();
+              refreshCanvasImages();
+            }
           }
         });
 
