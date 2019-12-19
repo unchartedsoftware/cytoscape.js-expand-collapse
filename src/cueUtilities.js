@@ -282,6 +282,83 @@ module.exports = function (params, cy, api) {
           }
         });
 
+        function isInsideCompound(node, e){
+          if (node){
+            var currMousePos = e.position || e.cyPosition;
+            var topLeft = {
+              x: (node.position("x") - node.width() / 2 - parseFloat(node.css('padding-left'))),
+              y: (node.position("y") - node.height() / 2 - parseFloat(node.css('padding-top')))};
+            var bottomRight = {
+              x: (node.position("x") + node.width() / 2 + parseFloat(node.css('padding-right'))),
+              y: (node.position("y") + node.height() / 2+ parseFloat(node.css('padding-bottom')))};
+    
+            if (currMousePos.x >= topLeft.x && currMousePos.y >= topLeft.y &&
+              currMousePos.x <= bottomRight.x && currMousePos.y <= bottomRight.y){
+              return true;
+            }
+          }
+          return false;
+        }
+
+        function getAllGroupsUnderEvent(cy, e) {
+          const groupsUnderEvent = [];
+          const groups = cy.$('.cy-expand-collapse-collapsed-node').union(cy.$(':parent'));
+          for (let i = 0; i < groups.length; i++) {
+            if (isInsideCompound(groups[i], e)) {
+              groupsUnderEvent.push(groups[i]);
+            }
+          }
+          return groupsUnderEvent;
+        }
+
+        function getAllGroupsWithHighestZDepth(groups) {
+          let highestZDepthGroups = [];
+          let highestZDepth = 0;
+          for (let i = 0; i < groups.length; i++) {
+            let currentZDepth = groups[i].zDepth();
+            if (currentZDepth > highestZDepth) {
+              highestZDepth = currentZDepth;
+              highestZDepthGroups = [groups[i]];
+            } else if (currentZDepth === highestZDepth) {
+              highestZDepthGroups.push(groups[i]);
+            }
+          }
+          return highestZDepthGroups;
+        }
+
+        function drawCueOnHighestZDepthGroup(e) {
+          const prevHoveredGroup = hoveredGroup;
+          const groupsUnderEvent = getAllGroupsUnderEvent(cy, e);
+          const highestZDepthGroups = getAllGroupsWithHighestZDepth(groupsUnderEvent);
+          if (highestZDepthGroups.length > 0) {
+            // take the last one as, we THINK cytoscape puts most recently created elements last in selecters
+            // the last element will be the one to select if we click on it when overlapping with other elements
+            hoveredGroup = highestZDepthGroups[highestZDepthGroups.length - 1];
+          } else {
+            hoveredGroup = null;
+          }
+          // to save computation, only redraw if we have a new hovered group
+          if ((prevHoveredGroup && !hoveredGroup) || !prevHoveredGroup || prevHoveredGroup.id() !== hoveredGroup.id()) {
+            refreshCanvasImages();
+          }
+        }
+        cy.on('mousemove', 'edge', data.eMouseMove = function(e) {
+          drawCueOnHighestZDepthGroup(e);
+        });
+
+        cy.on('mouseoff', 'edge', data.eMouseOffEdge = function(e) {
+          if (hoveredGroup) {
+            hoveredGroup = null;
+          }
+        });
+
+        cy.on('mousemove', 'node', data.eMouseMoveNode = function(e) {
+          let node = this;
+          if (!isAGroup(node) && parent.length === 0) {
+            drawCueOnHighestZDepthGroup(e);
+          }
+        });
+
         cy.on('grab', 'node', data.eGrab = function (e) {
           preventDrawing = true;
         });
@@ -463,7 +540,9 @@ module.exports = function (params, cy, api) {
           .off('unselect', 'node', data.eUnselect)
           .off('free', 'node', data.eFree)
           .off('zoom pan', data.eZoom)
-          .off('drag', 'node', data.eDrag);
+          .off('drag', 'node', data.eDrag)
+          .off('mousemove', 'edge', data.eMouseMove)
+          .off('mouseoff', 'edge', data.eMouseOffEdge);
 
       window.removeEventListener('resize', data.eWindowResize);
       $canvas.removeEventListener('mousedown', interceptEventWithinCue);
@@ -492,7 +571,9 @@ module.exports = function (params, cy, api) {
         .on('unselect', 'node', data.eUnselect)
         .on('free', 'node', data.eFree)
         .on('zoom pan', data.eZoom)
-        .on('drag', 'node', data.eDrag);
+        .on('drag', 'node', data.eDrag)
+        .on('mousemove', 'edge', data.eMouseMove)
+        .on('mouseoff', 'edge', data.eMouseOffEdge);
 
       window.addEventListener('resize', data.eWindowResize);
       $canvas.addEventListener('mousedown', interceptCytoscapeEventsWithinCue);
