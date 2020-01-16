@@ -291,7 +291,7 @@ module.exports = function (params, cy, api) {
             var bottomRight = {
               x: (node.position("x") + node.width() / 2 + parseFloat(node.css('padding-right'))),
               y: (node.position("y") + node.height() / 2+ parseFloat(node.css('padding-bottom')))};
-    
+
             if (currMousePos.x >= topLeft.x && currMousePos.y >= topLeft.y &&
               currMousePos.x <= bottomRight.x && currMousePos.y <= bottomRight.y){
               return true;
@@ -352,7 +352,7 @@ module.exports = function (params, cy, api) {
           drawCueOnHighestZDepthGroup(e);
         });
 
-        cy.on('mouseoff', 'edge', data.eMouseOffEdge = function(e) {
+        cy.on('mouseout', 'edge', data.eMouseOutEdge = function(e) {
           if (hoveredGroup) {
             hoveredGroup = null;
           }
@@ -360,7 +360,7 @@ module.exports = function (params, cy, api) {
 
         cy.on('mousemove', 'node', data.eMouseMoveNode = function(e) {
           let node = this;
-          if (!isAGroup(node) && parent.length === 0) {
+          if (!isAGroup(node)) {
             drawCueOnHighestZDepthGroup(e);
           }
         });
@@ -549,7 +549,7 @@ module.exports = function (params, cy, api) {
           .off('zoom pan', data.eZoom)
           .off('drag', 'node', data.eDrag)
           .off('mousemove', 'edge', data.eMouseMove)
-          .off('mouseoff', 'edge', data.eMouseOffEdge);
+          .off('mouseout', 'edge', data.eMouseOutEdge);
 
       window.removeEventListener('resize', data.eWindowResize);
       $canvas.removeEventListener('mousedown', interceptEventWithinCue);
@@ -581,7 +581,7 @@ module.exports = function (params, cy, api) {
         .on('zoom pan', data.eZoom)
         .on('drag', 'node', data.eDrag)
         .on('mousemove', 'edge', data.eMouseMove)
-        .on('mouseoff', 'edge', data.eMouseOffEdge);
+        .on('mouseout', 'edge', data.eMouseOutEdge);
 
       window.addEventListener('resize', data.eWindowResize);
       $canvas.addEventListener('mousedown', interceptCytoscapeEventsWithinCue);
