@@ -112,6 +112,10 @@ module.exports = function (params, cy, api) {
         return hoveredGroup && hoveredGroup.id() === node.id();
       }
 
+      function isMouseHoveringOverGroupChild(node) {
+        return hoveredGroup && node.parent().id() === hoveredGroup.id();
+      }
+
       function isAGroup(node) {
         return api.isCollapsible(node) || api.isExpandable(node);
       }
@@ -253,7 +257,7 @@ module.exports = function (params, cy, api) {
 
         cy.on('mouseout', 'node', data.eMouseOut = function(e) {
           let node = this;
-          if (isMouseHoveringOver(node)) {
+          if (isMouseHoveringOver(node) || isMouseHoveringOverGroupChild(node)) {
             // note: hoveredGroup is not set to null if we mouseout from a selected group
             // currently is not a problem as leftover hoveredGroup won't be used and will be reset on mouseover
             if (!isSelectedGroupsContains(hoveredGroup)) {
@@ -268,6 +272,96 @@ module.exports = function (params, cy, api) {
           if (isAGroup(node)) {
             hoveredGroup = node;
             refreshCanvasImages();
+          } else if (!node.isParent()) {
+            // if we are in a groups child
+            const parent = node.parent();
+            if (parent.length > 0) {
+              hoveredGroup = node.parent();
+              refreshCanvasImages();
+            }
+          }
+        });
+
+        function isInsideCompound(node, e){
+          if (node){
+            var currMousePos = e.position || e.cyPosition;
+            var topLeft = {
+              x: (node.position("x") - node.width() / 2 - parseFloat(node.css('padding-left'))),
+              y: (node.position("y") - node.height() / 2 - parseFloat(node.css('padding-top')))};
+            var bottomRight = {
+              x: (node.position("x") + node.width() / 2 + parseFloat(node.css('padding-right'))),
+              y: (node.position("y") + node.height() / 2+ parseFloat(node.css('padding-bottom')))};
+
+            if (currMousePos.x >= topLeft.x && currMousePos.y >= topLeft.y &&
+              currMousePos.x <= bottomRight.x && currMousePos.y <= bottomRight.y){
+              return true;
+            }
+          }
+          return false;
+        }
+
+        function getAllGroups(cy) {
+          return cy.$('.cy-expand-collapse-collapsed-node').union(':parent');
+        }
+
+        function getAllGroupsUnderEvent(cy, e) {
+          const groupsUnderEvent = [];
+          const groups = getAllGroups(cy);
+          for (let i = 0; i < groups.length; i++) {
+            if (isInsideCompound(groups[i], e)) {
+              groupsUnderEvent.push(groups[i]);
+            }
+          }
+          return groupsUnderEvent;
+        }
+
+        function getAllGroupsWithHighestZDepth(groups) {
+          let highestZDepthGroups = [];
+          let highestZDepth = 0;
+          groups.forEach((group) => {
+            let currentZDepth = group.zDepth();
+            // if we find groups with a higher zDepth, keep track of those
+            if (currentZDepth > highestZDepth) {
+              highestZDepth = currentZDepth;
+              highestZDepthGroups = [group];
+            } else if (currentZDepth === highestZDepth) {
+              highestZDepthGroups.push(group);
+            }
+          });
+          return highestZDepthGroups;
+        }
+
+        function drawCueOnHighestZDepthGroup(e) {
+          const prevHoveredGroup = hoveredGroup;
+          const groupsUnderEvent = getAllGroupsUnderEvent(cy, e);
+          const highestZDepthGroups = getAllGroupsWithHighestZDepth(groupsUnderEvent);
+          if (highestZDepthGroups.length > 0) {
+            // take the last one as, we THINK cytoscape puts most recently created elements last in selecters
+            // the last element will be the one to select if we click on it when overlapping with other elements
+            hoveredGroup = highestZDepthGroups[highestZDepthGroups.length - 1];
+          } else {
+            hoveredGroup = null;
+          }
+          // to save computation, only redraw if we have a new hovered group
+          if ((prevHoveredGroup && !hoveredGroup) || !prevHoveredGroup || prevHoveredGroup.id() !== hoveredGroup.id()) {
+            refreshCanvasImages();
+          }
+        }
+
+        cy.on('mousemove', 'edge', data.eMouseMove = function(e) {
+          drawCueOnHighestZDepthGroup(e);
+        });
+
+        cy.on('mouseout', 'edge', data.eMouseOutEdge = function(e) {
+          if (hoveredGroup) {
+            hoveredGroup = null;
+          }
+        });
+
+        cy.on('mousemove', 'node', data.eMouseMoveNode = function(e) {
+          let node = this;
+          if (!isAGroup(node)) {
+            drawCueOnHighestZDepthGroup(e);
           }
         });
 
@@ -443,6 +537,7 @@ module.exports = function (params, cy, api) {
         cy.off('mouseover', 'node', data.eMouseOver)
           .off('mouseout', 'node', data.eMouseOut)
           .off('mousedown', 'node', data.eMouseDown)
+          .off('mousemove', 'node', data.eMouseMoveNode)
           .off('mouseup', 'node', data.eMouseUp)
           .off('free', 'node', data.eFree)
           .off('grab', 'node', data.eGrab)
@@ -452,7 +547,9 @@ module.exports = function (params, cy, api) {
           .off('unselect', 'node', data.eUnselect)
           .off('free', 'node', data.eFree)
           .off('zoom pan', data.eZoom)
-          .off('drag', 'node', data.eDrag);
+          .off('drag', 'node', data.eDrag)
+          .off('mousemove', 'edge', data.eMouseMove)
+          .off('mouseout', 'edge', data.eMouseOutEdge);
 
       window.removeEventListener('resize', data.eWindowResize);
       $canvas.removeEventListener('mousedown', interceptEventWithinCue);
@@ -473,6 +570,7 @@ module.exports = function (params, cy, api) {
         .on('mouseout', 'node', data.eMouseOut)
         .on('mousedown', 'node', data.eMouseDown)
         .on('mouseup', 'node', data.eMouseUp)
+        .on('mousemove', 'node', data.eMouseMoveNode)
         .on('free', 'node', data.eFree)
         .on('grab', 'node', data.eGrab)
         .on('position', 'node', data.ePosition)
@@ -481,7 +579,9 @@ module.exports = function (params, cy, api) {
         .on('unselect', 'node', data.eUnselect)
         .on('free', 'node', data.eFree)
         .on('zoom pan', data.eZoom)
-        .on('drag', 'node', data.eDrag);
+        .on('drag', 'node', data.eDrag)
+        .on('mousemove', 'edge', data.eMouseMove)
+        .on('mouseout', 'edge', data.eMouseOutEdge);
 
       window.addEventListener('resize', data.eWindowResize);
       $canvas.addEventListener('mousedown', interceptCytoscapeEventsWithinCue);
