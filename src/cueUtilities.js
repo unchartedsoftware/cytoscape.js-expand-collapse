@@ -276,8 +276,7 @@ module.exports = function (params, cy, api) {
             // if we are in a groups child
             const parent = node.parent();
             if (parent.length > 0) {
-              hoveredGroup = node.parent();
-              refreshCanvasImages();
+                drawCueOnHighestZDepthGroup(e);
             }
           }
         });
