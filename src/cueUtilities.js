@@ -323,11 +323,11 @@ module.exports = function (params, cy, api) {
             let currentZDepth = group.zDepth();         // zDepth is depth of element on graph e.g. child nodes have > z depth than their parents
             let currentZIndex = group.style('z-index'); // z-index is order of elements at same z depth
             // if we find groups with a higher zDepth/zIndex combo, keep track of those
-            if (currentZDepth > highestZDepth || (currentZDepth === highestZDepth && currentZIndex > highestZIndex)) {
+            if (currentZDepth > highestZDepth || (currentZDepth === highestZDepth && currentZIndex > highestZIndexWithinZDepth)) {
               highestZDepth = currentZDepth;
-              highestZIndex = currentZIndex;
+              highestZIndexWithinZDepth = currentZIndex;
               highestZDepthGroups = [group];
-            } else if (currentZDepth === highestZDepth && currentZIndex === highestZIndex) {
+            } else if (currentZDepth === highestZDepth && currentZIndex === highestZIndexWithinZDepth) {
               highestZDepthGroups.push(group);
             }
           });
