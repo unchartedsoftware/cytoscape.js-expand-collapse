@@ -594,10 +594,10 @@ module.exports = function (params, cy, api) {
       window.addEventListener('resize', data.eWindowResize);
 
       var $canvas = data.canvas;
-      $canvas.addEventListener('mousedown', data.interceptCytoscapeEventsWithinCue);
-      $canvas.addEventListener('mouseup', data.interceptCytoscapeEventsWithinCue);
+      $canvas.addEventListener('mousedown', data.interceptEventWithinCue);
+      $canvas.addEventListener('mouseup', data.interceptEventWithinCue);
       $canvas.addEventListener('click', data.cueTap);
-      $canvas.addEventListener('touchstart', data.interceptCytoscapeEventsWithinCue);
+      $canvas.addEventListener('touchstart', data.interceptEventWithinCue);
       $canvas.addEventListener('touchend', data.cueTap);
     }
   };
