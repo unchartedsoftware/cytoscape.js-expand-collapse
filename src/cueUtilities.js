@@ -71,6 +71,7 @@ module.exports = function (params, cy, api) {
       sizeCanvas();
 
       var data = {};
+      data.canvas = $canvas;
 
       // if there are events field in data unbind them here
       // to prevent binding the same event multiple times
@@ -514,6 +515,9 @@ module.exports = function (params, cy, api) {
           }
         }
 
+        data.interceptEventWithinCue = interceptEventWithinCue;
+        data.cueTap = cueTap;
+
         $canvas.addEventListener('mousedown', interceptEventWithinCue);
         $canvas.addEventListener('mouseup', interceptEventWithinCue);
         $canvas.addEventListener('click', cueTap);
@@ -554,11 +558,13 @@ module.exports = function (params, cy, api) {
           .off('mouseout', 'edge', data.eMouseOutEdge);
 
       window.removeEventListener('resize', data.eWindowResize);
-      $canvas.removeEventListener('mousedown', interceptEventWithinCue);
-      $canvas.removeEventListener('mouseup', interceptEventWithinCue);
-      $canvas.removeEventListener('click', cueTap);
-      $canvas.removeEventListener('touchstart', interceptEventWithinCue);
-      $canvas.removeEventListener('touchend', cueTap);
+
+      var $canvas = data.canvas;
+      $canvas.removeEventListener('mousedown', data.interceptEventWithinCue);
+      $canvas.removeEventListener('mouseup', data.interceptEventWithinCue);
+      $canvas.removeEventListener('click', data.cueTap);
+      $canvas.removeEventListener('touchstart', data.interceptEventWithinCue);
+      $canvas.removeEventListener('touchend', data.cueTap);
     },
     rebind: function () {
       var data = getData();
@@ -586,11 +592,13 @@ module.exports = function (params, cy, api) {
         .on('mouseout', 'edge', data.eMouseOutEdge);
 
       window.addEventListener('resize', data.eWindowResize);
-      $canvas.addEventListener('mousedown', interceptCytoscapeEventsWithinCue);
-      $canvas.addEventListener('mouseup', interceptCytoscapeEventsWithinCue);
-      $canvas.addEventListener('click', cueTap);
-      $canvas.addEventListener('touchstart', interceptCytoscapeEventsWithinCue);
-      $canvas.addEventListener('touchend', cueTap);
+
+      var $canvas = data.canvas;
+      $canvas.addEventListener('mousedown', data.interceptEventWithinCue);
+      $canvas.addEventListener('mouseup', data.interceptEventWithinCue);
+      $canvas.addEventListener('click', data.cueTap);
+      $canvas.addEventListener('touchstart', data.interceptEventWithinCue);
+      $canvas.addEventListener('touchend', data.cueTap);
     }
   };
 
